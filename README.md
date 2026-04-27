@@ -1,5 +1,16 @@
 # scitex-session
 
+<!-- scitex-badges:start -->
+[![PyPI](https://img.shields.io/pypi/v/scitex-session.svg)](https://pypi.org/project/scitex-session/)
+[![Python](https://img.shields.io/pypi/pyversions/scitex-session.svg)](https://pypi.org/project/scitex-session/)
+[![Tests](https://github.com/ywatanabe1989/scitex-session/actions/workflows/test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-session/actions/workflows/test.yml)
+[![Install Test](https://github.com/ywatanabe1989/scitex-session/actions/workflows/install-test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-session/actions/workflows/install-test.yml)
+[![Coverage](https://codecov.io/gh/ywatanabe1989/scitex-session/graph/badge.svg)](https://codecov.io/gh/ywatanabe1989/scitex-session)
+[![Docs](https://readthedocs.org/projects/scitex-session/badge/?version=latest)](https://scitex-session.readthedocs.io/en/latest/)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+<!-- scitex-badges:end -->
+
+
 `@session` decorator and lifecycle management (auto-CLI, output dir tree, randomstate, configs) extracted from the [SciTeX](https://github.com/ywatanabe1989/scitex-python) ecosystem as a standalone package.
 
 ## Install
