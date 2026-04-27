@@ -28,6 +28,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "joblib",
+    "flask",
     "figrecipe",
     "scitex",
     "pytest",
