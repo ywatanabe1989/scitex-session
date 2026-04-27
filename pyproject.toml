@@ -28,6 +28,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "scitex",
     "pytest",
     "pytest-cov",
     "ruff",
