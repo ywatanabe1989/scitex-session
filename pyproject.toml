@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scitex-session"
-version = "0.1.0"
+version = "0.1.1"
 description = "@session decorator + lifecycle (auto-CLI, output dir tree, RandomStateManager) — standalone module from the SciTeX ecosystem"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -54,6 +54,12 @@ Documentation = "https://scitex-session.readthedocs.io"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+scitex_session = ["_skills/**/*.md"]
+
+[project.entry-points."scitex_dev.skills"]
+scitex-session = "scitex_session"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
