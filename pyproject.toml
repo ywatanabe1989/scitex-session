@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scitex-session"
-version = "0.1.1"
+version = "0.1.2"
 description = "@session decorator + lifecycle (auto-CLI, output dir tree, RandomStateManager) — standalone module from the SciTeX ecosystem"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -24,6 +24,7 @@ dependencies = [
     "scitex-logging>=0.1.0",
     "scitex-repro>=0.1.0",
     "scitex-str>=0.1.0",
+    "scitex-io>=0.2.0",
 ]
 
 [project.optional-dependencies]
