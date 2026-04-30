@@ -70,6 +70,7 @@ from ._manager import SessionManager
 
 # Export public API
 __all__ = [
+    "__version__",
     # Sentinel for injected parameters
     "INJECTED",
     # Session lifecycle (main functions)
