@@ -94,7 +94,7 @@ The umbrella package's `scitex.session` import path is preserved via a
 
 `scitex-session` is part of [**SciTeX**](https://scitex.ai). Install via
 the umbrella with `pip install scitex[session]` to use as
-`scitex.session` (Python).
+`scitex.session` (Python) or `scitex session ...` (CLI).
 
 >Four Freedoms for Research
 >
