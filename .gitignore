@@ -18,3 +18,4 @@ docs/sphinx/_build/
 docs/sphinx/api/
 *.swp
 .DS_Store
+.scitex/
