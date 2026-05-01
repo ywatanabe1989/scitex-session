@@ -1,0 +1,405 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_session &mdash; scitex-session 0.1.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=59fadc99"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="scitex_session.template" href="scitex_session.template.html" />
+    <link rel="prev" title="API" href="../api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            scitex-session
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">scitex_session</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_session.start"><code class="docutils literal notranslate"><span class="pre">start()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_session.close"><code class="docutils literal notranslate"><span class="pre">close()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_session.running2finished"><code class="docutils literal notranslate"><span class="pre">running2finished()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_session.session"><code class="docutils literal notranslate"><span class="pre">session()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_session.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_session.SessionManager"><code class="docutils literal notranslate"><span class="pre">SessionManager</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_session.SessionManager.create_session"><code class="docutils literal notranslate"><span class="pre">SessionManager.create_session()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_session.SessionManager.close_session"><code class="docutils literal notranslate"><span class="pre">SessionManager.close_session()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_session.SessionManager.get_active_sessions"><code class="docutils literal notranslate"><span class="pre">SessionManager.get_active_sessions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_session.SessionManager.get_session"><code class="docutils literal notranslate"><span class="pre">SessionManager.get_session()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_session.SessionManager.list_sessions"><code class="docutils literal notranslate"><span class="pre">SessionManager.list_sessions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scitex_session.template.html">scitex_session.template</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scitex-session</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">scitex_session</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/scitex_session.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-scitex_session">
+<span id="scitex-session"></span><h1>scitex_session<a class="headerlink" href="#module-scitex_session" title="Link to this heading"></a></h1>
+<p>scitex-session — &#64;session decorator + lifecycle management (standalone).</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_session.start">
+<span class="sig-prename descclassname"><span class="pre">scitex_session.</span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdir_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">os</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">np</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size_mm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(160,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autolayout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_execution_flow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_top_right_spines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_logs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_lifecycle/_start.html#start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.start" title="Link to this definition"></a></dt>
+<dd><p>Initialize experiment session with reproducibility settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sys</strong> (<em>module</em><em>, </em><em>optional</em>) – Python sys module for I/O redirection</p></li>
+<li><p><strong>plt</strong> (<em>module</em><em>, </em><em>optional</em>) – Matplotlib pyplot module for plotting configuration</p></li>
+<li><p><strong>file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Script file path. If None, automatically detected</p></li>
+<li><p><strong>sdir</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Save directory path</p></li>
+<li><p><strong>sdir_suffix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Suffix to append to save directory</p></li>
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><em>object</em></a><em>, </em><em>optional</em>) – Command line arguments or configuration object</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=42</em>) – Random seed for reproducibility</p></li>
+<li><p><strong>agg</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to use matplotlib Agg backend</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to print detailed information</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(CONFIGS, stdout, stderr, plt, COLORS, rng)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_session.close">
+<span class="sig-prename descclassname"><span class="pre">scitex_session.</span></span><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CONFIG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">':)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_lifecycle/_close.html#close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.close" title="Link to this definition"></a></dt>
+<dd><p>Close experiment session and finalize logging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>CONFIG</strong> (<em>DotDict</em>) – Configuration dictionary from start()</p></li>
+<li><p><strong>message</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>default=':</em><em>)</em><em>'</em>) – Completion message</p></li>
+<li><p><strong>notify</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to send notification</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to print verbose output</p></li>
+<li><p><strong>exit_status</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Exit status code (0=success, 1=error, None=finished)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_session.running2finished">
+<span class="sig-prename descclassname"><span class="pre">scitex_session.</span></span><span class="sig-name descname"><span class="pre">running2finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CONFIG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_src_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_lifecycle/_close.html#running2finished"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.running2finished" title="Link to this definition"></a></dt>
+<dd><p>Move session from RUNNING to FINISHED directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>CONFIG</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – Session configuration dictionary</p></li>
+<li><p><strong>exit_status</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Exit status code (0=success, 1=error, None=finished)</p></li>
+<li><p><strong>remove_src_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=True</em>) – Whether to remove source directory after copy</p></li>
+<li><p><strong>max_wait</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=60</em>) – Maximum seconds to wait for copy operation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated configuration with new SDIR</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_session.session">
+<span class="sig-prename descclassname"><span class="pre">scitex_session.</span></span><span class="sig-name descname"><span class="pre">session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdir_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">session_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_decorator.html#session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.session" title="Link to this definition"></a></dt>
+<dd><p>Decorator to wrap function in scitex session.</p>
+<p>Automatically handles:
+- CLI argument parsing from function signature
+- Session initialization (logging, output directories)
+- Execution
+- Cleanup
+- Error handling</p>
+<p>This decorator is designed for script entry points. The decorated function
+should be called without arguments from <cite>if __name__ == ‘__main__’:</cite> to
+trigger CLI parsing and session management.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span>) – Function to wrap (set automatically by decorator)</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Enable verbose logging</p></li>
+<li><p><strong>agg</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Use matplotlib Agg backend</p></li>
+<li><p><strong>notify</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Send notification on completion</p></li>
+<li><p><strong>sdir_suffix</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Suffix for output directory name</p></li>
+<li><p><strong>**session_kwargs</strong> – Additional session configuration parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>&#64;stx.session
+def analyze(data_path: str, threshold: float = 0.5):</p>
+<blockquote>
+<div><p>‘’’Analyze data file.’’’
+data = stx.io.load(data_path)
+result = process(data, threshold)
+stx.io.save(result, “output.csv”)
+return 0</p>
+</div></blockquote>
+<dl class="simple">
+<dt>if __name__ == ‘__main__’:</dt><dd><p>analyze()  # No arguments = CLI mode with session management</p>
+</dd>
+</dl>
+<p># CLI: python script.py –data-path data.csv –threshold 0.7</p>
+<dl>
+<dt>Example with options:</dt><dd><p>&#64;stx.session(verbose=True, notify=True)
+def train_model(model_name: str, epochs: int = 10):</p>
+<blockquote>
+<div><p>‘’’Train ML model.’’’
+# These are automatically available as globals:
+# - CONFIG: Session configuration dict
+# - plt: Matplotlib pyplot (configured for session)
+# - COLORS: Custom Colors
+# - rngg: RandomStateManager (fixes seeds, creates named generators)
+logger.info(f”Session ID: {CONFIG[‘ID’]}”)
+logger.info(f”Output directory: {CONFIG[‘SDIR_RUN’]}”)
+# … training code …
+return 0</p>
+</div></blockquote>
+<dl class="simple">
+<dt>if __name__ == ‘__main__’:</dt><dd><p>train_model()</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Function name can be anything (not just ‘main’)</p></li>
+<li><p>Calling with arguments bypasses session management: analyze(‘/path’, 0.5)</p></li>
+<li><p>Only one session-managed function per script</p></li>
+<li><p>Do NOT call multiple &#64;session decorated functions from one script</p></li>
+<li><p>Do NOT nest session-decorated function calls without arguments</p></li>
+</ul>
+<dl>
+<dt>Injected Global Variables:</dt><dd><p>When called without arguments (CLI mode), these are injected into globals:
+- CONFIG (dict): Session configuration with ID, SDIR, paths, etc.
+- plt (module): matplotlib.pyplot configured with session settings
+- COLORS (CustomColors): Custom Colors for consistent plotting
+- rngg (RandomStateManager): Manages reproducibility by fixing global seeds</p>
+<blockquote>
+<div><p>and creating named generators via rngg(“name”)</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_session.run">
+<span class="sig-prename descclassname"><span class="pre">scitex_session.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">session_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_decorator.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.run" title="Link to this definition"></a></dt>
+<dd><p>Run function with session management.</p>
+<p>Alternative to decorator for more explicit control.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span>) – Function to run</p></li>
+<li><p><strong>parse_args</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></span>) – Optional custom argument parser</p></li>
+<li><p><strong>**session_kwargs</strong> – Session configuration</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<dl class="simple">
+<dt>def main(args):</dt><dd><p># Your code
+return 0</p>
+</dd>
+<dt>if __name__ == ‘__main__’:</dt><dd><p>stx.session.run(main)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_session.SessionManager">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_session.</span></span><span class="sig-name descname"><span class="pre">SessionManager</span></span><a class="reference internal" href="../_modules/scitex_session/_manager.html#SessionManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.SessionManager" title="Link to this definition"></a></dt>
+<dd><p>Manages experiment sessions with tracking and lifecycle management.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_session.SessionManager.create_session">
+<span class="sig-name descname"><span class="pre">create_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_manager.html#SessionManager.create_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.SessionManager.create_session" title="Link to this definition"></a></dt>
+<dd><p>Register a new session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Unique identifier for the session</p></li>
+<li><p><strong>config</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – Session configuration dictionary</p></li>
+<li><p><strong>script_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Path to the script being run</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_session.SessionManager.close_session">
+<span class="sig-name descname"><span class="pre">close_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'success'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_manager.html#SessionManager.close_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.SessionManager.close_session" title="Link to this definition"></a></dt>
+<dd><p>Mark a session as closed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Unique identifier for the session to close</p></li>
+<li><p><strong>status</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Final status (success, failed, error)</p></li>
+<li><p><strong>exit_code</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Exit code of the session</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_session.SessionManager.get_active_sessions">
+<span class="sig-name descname"><span class="pre">get_active_sessions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_manager.html#SessionManager.get_active_sessions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.SessionManager.get_active_sessions" title="Link to this definition"></a></dt>
+<dd><p>Get all active sessions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of active session information</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_session.SessionManager.get_session">
+<span class="sig-name descname"><span class="pre">get_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_manager.html#SessionManager.get_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.SessionManager.get_session" title="Link to this definition"></a></dt>
+<dd><p>Get specific session information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>session_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Session ID to retrieve</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Session information dictionary</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_session.SessionManager.list_sessions">
+<span class="sig-name descname"><span class="pre">list_sessions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_session/_manager.html#SessionManager.list_sessions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_session.SessionManager.list_sessions" title="Link to this definition"></a></dt>
+<dd><p>Get all sessions (active and closed).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of all session information</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p class="rubric">Modules</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="scitex_session.template.html#module-scitex_session.template" title="scitex_session.template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">template</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../api.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scitex_session.template.html" class="btn btn-neutral float-right" title="scitex_session.template" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

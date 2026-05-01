@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_session._manager &mdash; scitex-session 0.1.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=59fadc99"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scitex-session
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/scitex_session.html">scitex_session</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scitex-session</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scitex_session._manager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scitex_session._manager</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># Timestamp: &quot;2025-08-21 20:36:50 (ywatanabe)&quot;</span>
+<span class="c1"># File: /home/ywatanabe/proj/SciTeX-Code/src/scitex/session/_manager.py</span>
+<span class="c1"># ----------------------------------------</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="n">__FILE__</span> <span class="o">=</span> <span class="vm">__file__</span>
+<span class="n">__DIR__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__FILE__</span><span class="p">)</span>
+<span class="c1"># ----------------------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;Session manager for tracking active experiment sessions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+
+
+<div class="viewcode-block" id="SessionManager">
+<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages experiment sessions with tracking and lifecycle management.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="SessionManager.create_session">
+<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.create_session">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_session</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">script_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register a new session.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session_id : str</span>
+<span class="sd">            Unique identifier for the session</span>
+<span class="sd">        config : Dict[str, Any]</span>
+<span class="sd">            Session configuration dictionary</span>
+<span class="sd">        script_path : str, optional</span>
+<span class="sd">            Path to the script being run</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">,</span>
+            <span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;running&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;script_path&quot;</span><span class="p">:</span> <span class="n">script_path</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Start verification tracking (silent fail)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scitex.clew</span><span class="w"> </span><span class="kn">import</span> <span class="n">on_session_start</span>
+
+            <span class="n">on_session_start</span><span class="p">(</span>
+                <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+                <span class="n">script_path</span><span class="o">=</span><span class="n">script_path</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SessionManager.close_session">
+<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.close_session">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close_session</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;success&quot;</span><span class="p">,</span>
+        <span class="n">exit_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mark a session as closed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session_id : str</span>
+<span class="sd">            Unique identifier for the session to close</span>
+<span class="sd">        status : str, optional</span>
+<span class="sd">            Final status (success, failed, error)</span>
+<span class="sd">        exit_code : int, optional</span>
+<span class="sd">            Exit code of the session</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">session_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;closed&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">][</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="p">[</span><span class="n">session_id</span><span class="p">][</span><span class="s2">&quot;exit_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exit_code</span>
+
+        <span class="c1"># Stop verification tracking (silent fail)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scitex.clew</span><span class="w"> </span><span class="kn">import</span> <span class="n">on_session_close</span>
+
+            <span class="n">on_session_close</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">exit_code</span><span class="o">=</span><span class="n">exit_code</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SessionManager.get_active_sessions">
+<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.get_active_sessions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_active_sessions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all active sessions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary of active session information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;running&quot;</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SessionManager.get_session">
+<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.get_session">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get specific session information.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session_id : str</span>
+<span class="sd">            Session ID to retrieve</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Session information dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="p">{})</span></div>
+
+
+<div class="viewcode-block" id="SessionManager.list_sessions">
+<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.list_sessions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_sessions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all sessions (active and closed).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary of all session information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+</div>
+
+
+
+<span class="c1"># Global session manager</span>
+<span class="n">_session_manager</span> <span class="o">=</span> <span class="n">SessionManager</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_global_session_manager</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SessionManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the global session manager instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SessionManager</span>
+<span class="sd">        Global session manager instance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_session_manager</span>
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
