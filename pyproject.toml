@@ -25,7 +25,6 @@ dependencies = [
     "scitex-repro>=0.1.0",
     "scitex-str>=0.1.0",
     "scitex-io>=0.2.0",
-    "scitex",
 ]
 
 [project.optional-dependencies]
@@ -33,7 +32,6 @@ dev = [
     "joblib",
     "flask",
     "figrecipe",
-    "scitex",
     "pytest",
     "pytest-cov",
     "ruff",
