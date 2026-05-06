@@ -129,7 +129,7 @@
 
         <span class="c1"># Start verification tracking (silent fail)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">scitex.clew</span><span class="w"> </span><span class="kn">import</span> <span class="n">on_session_start</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scitex_clew</span><span class="w"> </span><span class="kn">import</span> <span class="n">on_session_start</span>
 
             <span class="n">on_session_start</span><span class="p">(</span>
                 <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
@@ -165,7 +165,7 @@
 
         <span class="c1"># Stop verification tracking (silent fail)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">scitex.clew</span><span class="w"> </span><span class="kn">import</span> <span class="n">on_session_close</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">scitex_clew</span><span class="w"> </span><span class="kn">import</span> <span class="n">on_session_close</span>
 
             <span class="n">on_session_close</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span> <span class="n">exit_code</span><span class="o">=</span><span class="n">exit_code</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
