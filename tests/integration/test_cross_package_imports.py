@@ -16,18 +16,17 @@ import pytest
 # ===== AUTO-GENERATED: cross-package imports =====
 CROSS_PACKAGE_IMPORTS = [
     'scitex',
-    'scitex.clew',
-    'scitex.io',
-    'scitex.logging',
-    'scitex.plt',
-    'scitex.str',
     'scitex.utils._notify',
+    'scitex_clew',
     'scitex_dev._analyze_code_flow',
     'scitex_dict',
     'scitex_gen._detect_notebook_path',
+    'scitex_io',
     'scitex_io._flush',
     'scitex_io._load',
     'scitex_io._save',
+    'scitex_logging',
+    'scitex_plt',
     'scitex_repro',
     'scitex_str',
 ]
