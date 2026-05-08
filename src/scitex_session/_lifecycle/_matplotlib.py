@@ -8,11 +8,10 @@ from __future__ import annotations
 import os
 import platform
 import sys
+from logging import getLogger
 from typing import Any, Dict, Optional, Tuple
 
 import matplotlib
-
-from logging import getLogger
 
 logger = getLogger(__name__)
 
@@ -71,7 +70,10 @@ def setup_matplotlib(
     if plt is not None:
         plt.close("all")
         _, COLORS = configure_mpl(plt, **mpl_kwargs)
-        COLORS["gray"] = COLORS["grey"]
+        if "grey" in COLORS and "gray" not in COLORS:
+            COLORS["gray"] = COLORS["grey"]
+        elif "gray" in COLORS and "grey" not in COLORS:
+            COLORS["grey"] = COLORS["gray"]
 
         # Note: Backend is now set early in module initialization
         # to avoid tkinter threading issues in headless/WSL environments.
@@ -85,6 +87,7 @@ def setup_matplotlib(
 
         # Replace matplotlib.pyplot with scitex.plt to get wrapped functions
         import scitex_plt as stx_plt
+
         return stx_plt, COLORS
     return plt, None
 
