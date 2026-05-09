@@ -25,7 +25,7 @@ class TestFormatDiffTime:
 
     def test_format_seconds_only(self):
         """Test formatting time difference with seconds only."""
-        from scitex_session._lifecycle import _format_diff_time
+        from scitex_session._lifecycle._utils import format_diff_time as _format_diff_time
 
         diff = timedelta(seconds=45)
         result = _format_diff_time(diff)
@@ -33,7 +33,7 @@ class TestFormatDiffTime:
 
     def test_format_minutes_and_seconds(self):
         """Test formatting time difference with minutes and seconds."""
-        from scitex_session._lifecycle import _format_diff_time
+        from scitex_session._lifecycle._utils import format_diff_time as _format_diff_time
 
         diff = timedelta(minutes=5, seconds=30)
         result = _format_diff_time(diff)
@@ -41,7 +41,7 @@ class TestFormatDiffTime:
 
     def test_format_hours_minutes_seconds(self):
         """Test formatting time difference with hours, minutes, seconds."""
-        from scitex_session._lifecycle import _format_diff_time
+        from scitex_session._lifecycle._utils import format_diff_time as _format_diff_time
 
         diff = timedelta(hours=2, minutes=15, seconds=45)
         result = _format_diff_time(diff)
@@ -49,7 +49,7 @@ class TestFormatDiffTime:
 
     def test_format_zero_time(self):
         """Test formatting zero time difference."""
-        from scitex_session._lifecycle import _format_diff_time
+        from scitex_session._lifecycle._utils import format_diff_time as _format_diff_time
 
         diff = timedelta(seconds=0)
         result = _format_diff_time(diff)
@@ -57,7 +57,7 @@ class TestFormatDiffTime:
 
     def test_format_large_hours(self):
         """Test formatting large hour values."""
-        from scitex_session._lifecycle import _format_diff_time
+        from scitex_session._lifecycle._utils import format_diff_time as _format_diff_time
 
         diff = timedelta(hours=100, minutes=30, seconds=15)
         result = _format_diff_time(diff)
@@ -69,7 +69,7 @@ class TestSimplifyRelativePath:
 
     def test_simplify_running_path(self):
         """Test simplifying path with RUNNING directory."""
-        from scitex_session._lifecycle import _simplify_relative_path
+        from scitex_session._lifecycle._utils import simplify_relative_path as _simplify_relative_path
 
         # Use a path relative to current working directory for consistency
         cwd = os.getcwd()
@@ -84,7 +84,7 @@ class TestSimplifyRelativePath:
 
     def test_simplify_scripts_path(self):
         """Test simplifying path with scripts directory."""
-        from scitex_session._lifecycle import _simplify_relative_path
+        from scitex_session._lifecycle._utils import simplify_relative_path as _simplify_relative_path
 
         cwd = os.getcwd()
         sdir = os.path.join(cwd, "scripts/test/RUNNING/2024Y-01M-01D-00h00m00s_XXXX")
@@ -99,7 +99,7 @@ class TestGetDebugMode:
 
     def test_debug_mode_file_not_exists(self):
         """Test debug mode when config file doesn't exist."""
-        from scitex_session._lifecycle import _get_debug_mode
+        from scitex_session._lifecycle._utils import get_debug_mode as _get_debug_mode
 
         with patch("os.path.exists", return_value=False):
             result = _get_debug_mode()
@@ -107,7 +107,7 @@ class TestGetDebugMode:
 
     def test_debug_mode_returns_bool(self):
         """Test debug mode returns boolean."""
-        from scitex_session._lifecycle import _get_debug_mode
+        from scitex_session._lifecycle._utils import get_debug_mode as _get_debug_mode
 
         result = _get_debug_mode()
         assert isinstance(result, bool)
@@ -118,14 +118,14 @@ class TestGetScitexVersion:
 
     def test_get_version_returns_string(self):
         """Test version returns string."""
-        from scitex_session._lifecycle import _get_scitex_version
+        from scitex_session._lifecycle._utils import get_scitex_version as _get_scitex_version
 
         result = _get_scitex_version()
         assert isinstance(result, str)
 
     def test_get_version_not_empty(self):
         """Test version is not empty."""
-        from scitex_session._lifecycle import _get_scitex_version
+        from scitex_session._lifecycle._utils import get_scitex_version as _get_scitex_version
 
         result = _get_scitex_version()
         assert len(result) > 0
@@ -136,7 +136,7 @@ class TestInitializeEnv:
 
     def test_initialize_env_returns_id_and_pid(self):
         """Test initialization returns ID and PID."""
-        from scitex_session._lifecycle import _initialize_env
+        from scitex_session._lifecycle._utils import initialize_env as _initialize_env
 
         ID, PID = _initialize_env(IS_DEBUG=False)
 
@@ -147,7 +147,7 @@ class TestInitializeEnv:
 
     def test_initialize_env_debug_mode(self):
         """Test initialization in debug mode."""
-        from scitex_session._lifecycle import _initialize_env
+        from scitex_session._lifecycle._utils import initialize_env as _initialize_env
 
         ID, PID = _initialize_env(IS_DEBUG=True)
 
@@ -160,7 +160,7 @@ class TestSetupConfigs:
 
     def test_setup_configs_basic(self):
         """Test basic configuration setup."""
-        from scitex_session._lifecycle import _setup_configs
+        from scitex_session._lifecycle._config import setup_configs as _setup_configs
 
         with tempfile.TemporaryDirectory() as tmpdir:
             sdir = os.path.join(tmpdir, "RUNNING", "test_id")
@@ -183,7 +183,7 @@ class TestSetupConfigs:
 
     def test_setup_configs_sdir_paths(self):
         """Test SDIR_OUT and SDIR_RUN are set correctly."""
-        from scitex_session._lifecycle import _setup_configs
+        from scitex_session._lifecycle._config import setup_configs as _setup_configs
 
         with tempfile.TemporaryDirectory() as tmpdir:
             sdir = os.path.join(tmpdir, "script_out", "RUNNING", "test_id")
@@ -209,7 +209,7 @@ class TestSetupMatplotlib:
 
     def test_setup_matplotlib_with_none(self):
         """Test matplotlib setup with None plt."""
-        from scitex_session._lifecycle import _setup_matplotlib
+        from scitex_session._lifecycle._matplotlib import setup_matplotlib as _setup_matplotlib
 
         plt_result, colors = _setup_matplotlib(plt=None)
 
@@ -220,7 +220,7 @@ class TestSetupMatplotlib:
         """Test matplotlib setup with actual pyplot."""
         import matplotlib.pyplot as plt
 
-        from scitex_session._lifecycle import _setup_matplotlib
+        from scitex_session._lifecycle._matplotlib import setup_matplotlib as _setup_matplotlib
 
         plt_result, colors = _setup_matplotlib(plt=plt)
 
@@ -239,14 +239,14 @@ class TestArgsToStr:
 
     def test_args_to_str_empty(self):
         """Test args to string with empty dict."""
-        from scitex_session._lifecycle import _args_to_str
+        from scitex_session._lifecycle._utils import args_to_str as _args_to_str
 
         result = _args_to_str({})
         assert result == ""
 
     def test_args_to_str_with_values(self):
         """Test args to string with values."""
-        from scitex_session._lifecycle import _args_to_str
+        from scitex_session._lifecycle._utils import args_to_str as _args_to_str
 
         args = {"key1": "value1", "key2": 42}
         result = _args_to_str(args)
@@ -258,7 +258,7 @@ class TestArgsToStr:
 
     def test_args_to_str_formatting(self):
         """Test args to string has proper formatting."""
-        from scitex_session._lifecycle import _args_to_str
+        from scitex_session._lifecycle._utils import args_to_str as _args_to_str
 
         args = {"a": 1, "bb": 2}
         result = _args_to_str(args)
@@ -272,7 +272,7 @@ class TestEscapeAnsiFromLogFiles:
 
     def test_escape_ansi_removes_codes(self):
         """Test ANSI escape codes are removed."""
-        from scitex_session._lifecycle import _escape_ansi_from_log_files
+        from scitex_session._lifecycle._utils import escape_ansi_from_log_files as _escape_ansi_from_log_files
 
         with tempfile.TemporaryDirectory() as tmpdir:
             log_file = os.path.join(tmpdir, "test.log")
@@ -294,7 +294,7 @@ class TestEscapeAnsiFromLogFiles:
 
     def test_escape_ansi_empty_file_list(self):
         """Test with empty file list."""
-        from scitex_session._lifecycle import _escape_ansi_from_log_files
+        from scitex_session._lifecycle._utils import escape_ansi_from_log_files as _escape_ansi_from_log_files
 
         # Should not raise
         _escape_ansi_from_log_files([])
@@ -305,7 +305,7 @@ class TestProcessTimestamp:
 
     def test_process_timestamp_adds_end_time(self):
         """Test processing adds end datetime."""
-        from scitex_session._lifecycle import _process_timestamp
+        from scitex_session._lifecycle._utils import process_timestamp as _process_timestamp
 
         config = {"START_DATETIME": datetime.now() - timedelta(minutes=5)}
 
@@ -317,7 +317,7 @@ class TestProcessTimestamp:
 
     def test_process_timestamp_calculates_duration(self):
         """Test processing calculates run duration."""
-        from scitex_session._lifecycle import _process_timestamp
+        from scitex_session._lifecycle._utils import process_timestamp as _process_timestamp
 
         start_time = datetime.now() - timedelta(hours=1, minutes=30, seconds=45)
         config = {"START_DATETIME": start_time}
@@ -745,7 +745,7 @@ class TestClearPythonLogDir:
 
     def test_clear_existing_dir(self):
         """Test clearing existing log directory."""
-        from scitex_session._lifecycle import _clear_python_log_dir
+        from scitex_session._lifecycle._utils import clear_python_log_dir as _clear_python_log_dir
 
         with tempfile.TemporaryDirectory() as tmpdir:
             log_dir = os.path.join(tmpdir, "logs")
@@ -761,7 +761,7 @@ class TestClearPythonLogDir:
 
     def test_clear_nonexistent_dir(self):
         """Test clearing non-existent directory doesn't raise."""
-        from scitex_session._lifecycle import _clear_python_log_dir
+        from scitex_session._lifecycle._utils import clear_python_log_dir as _clear_python_log_dir
 
         # Should not raise
         _clear_python_log_dir("/nonexistent/path/that/does/not/exist")
@@ -830,14 +830,14 @@ class TestPrintHeader:
     def test_print_header_with_args(self):
         """Test print header with argparse namespace."""
         from scitex.dict import DotDict
-        from scitex_session._lifecycle import _print_header
+        from scitex_session._lifecycle._utils import print_header as _print_header
 
         args = argparse.Namespace(param1="value1", param2=42)
         configs = DotDict({"test": "value"})
 
         # Should not raise
-        with patch("scitex_session._lifecycle._printc"):
-            with patch("scitex_session._lifecycle.sleep"):
+        with patch("scitex_session._lifecycle._utils._printc"):
+            with patch("scitex_session._lifecycle._utils.sleep"):
                 _print_header(
                     ID="test_id",
                     PID=12345,
@@ -850,13 +850,13 @@ class TestPrintHeader:
     def test_print_header_without_args(self):
         """Test print header without args."""
         from scitex.dict import DotDict
-        from scitex_session._lifecycle import _print_header
+        from scitex_session._lifecycle._utils import print_header as _print_header
 
         configs = DotDict({"test": "value"})
 
         # Should not raise
-        with patch("scitex_session._lifecycle._printc"):
-            with patch("scitex_session._lifecycle.sleep"):
+        with patch("scitex_session._lifecycle._utils._printc"):
+            with patch("scitex_session._lifecycle._utils.sleep"):
                 _print_header(
                     ID="test_id",
                     PID=12345,

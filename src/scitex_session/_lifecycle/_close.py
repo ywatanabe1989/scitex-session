@@ -10,9 +10,8 @@ import os as _os
 import shutil
 import time
 from glob import glob as _glob
-from pathlib import Path
-
 from logging import getLogger
+from pathlib import Path
 
 
 def scitex_utils_notify(*args, **kwargs):
@@ -82,7 +81,7 @@ def running2finished(CONFIG, exit_status=None, remove_src_dir=True, max_wait=60)
                     f"Script failed: {dest_dir}",
                 )
             elif exit_status == 0:
-                logger.success(
+                logger.info(
                     f"Congratulations! The script completed: {dest_dir}",
                 )
             else:
