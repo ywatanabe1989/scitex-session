@@ -9,7 +9,7 @@
 <p align="center"><b>`@session` decorator + lifecycle (auto-CLI, output dir tree, randomstate, configs).</b></p>
 
 <p align="center">
-  <a href="https://scitex-session.readthedocs.io/">Full Documentation</a> · <code>pip install scitex-session</code>
+  <a href="https://scitex-session.readthedocs.io/">Full Documentation</a> · <code>uv pip install scitex-session[all]</code>
 </p>
 
 <!-- scitex-badges:start -->
