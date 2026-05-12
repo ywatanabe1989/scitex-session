@@ -36,6 +36,11 @@ dev = [
     "pytest-cov",
     "ruff",
     "scitex-dev>=0.11.7",
+    # tests/scitex_session/test__{manager,decorator,template}.py +
+    # tests/scitex_session/_lifecycle/test__utils.py importorskip these
+    "h5py",
+    "zarr",
+    "natsort",
 ]
 docs = [
     "sphinx>=7.0",
@@ -65,6 +70,11 @@ scitex-session = "scitex_session"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--disable-warnings"]
+
+[tool.coverage.run]
+parallel = true
+source = ["scitex_session"]
+concurrency = ["multiprocessing", "thread"]
 
 [tool.ruff]
 target-version = "py39"

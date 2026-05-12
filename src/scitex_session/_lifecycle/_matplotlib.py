@@ -35,12 +35,16 @@ if is_headless:
     matplotlib.use("Agg")
 
 
-try:
-    from figrecipe.utils._configure_mpl import configure_mpl as _configure_mpl
-except ImportError:
-    # No-op fallback when the umbrella `scitex` package isn't installed.
-    # configure_mpl normally tunes rcParams + colors via scitex.dict; without
-    # it, matplotlib uses its defaults — sessions still work.
+from scitex_dev import try_import_optional
+
+_configure_mpl = try_import_optional(
+    "figrecipe.utils._configure_mpl", "configure_mpl"
+)
+if _configure_mpl is None:
+    # No-op fallback when figrecipe (an optional dev/visualization dep)
+    # isn't installed. configure_mpl normally tunes rcParams + colors via
+    # scitex.dict; without it, matplotlib uses its defaults — sessions
+    # still work.
     def _configure_mpl(plt, **kwargs):
         return plt, {}
 

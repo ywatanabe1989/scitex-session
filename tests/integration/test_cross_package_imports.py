@@ -22,7 +22,7 @@ CROSS_PACKAGE_IMPORTS = [
     'scitex',
     'scitex.utils._notify',
     'scitex_clew',
-    'scitex_dev._analyze_code_flow',
+    'scitex_dev',
     'scitex_dict',
     'scitex_gen._detect_notebook_path',
     'scitex_io',

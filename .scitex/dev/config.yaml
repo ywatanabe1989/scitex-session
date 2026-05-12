@@ -1,0 +1,7 @@
+# Per-package overrides for `scitex-dev ecosystem audit-all`.
+# Tracked via .gitignore exception (.scitex/* + !.scitex/dev/config.yaml).
+
+audit:
+  root-whitelist:
+    files:
+      - codecov.yml

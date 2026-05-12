@@ -30,9 +30,12 @@ from ._utils import (
 logger = getLogger(__name__)
 
 # For development code flow analysis
-try:
-    from scitex_dev._analyze_code_flow import analyze_code_flow
-except ImportError:
+from scitex_dev import try_import_optional
+
+analyze_code_flow = try_import_optional(
+    "scitex_dev._analyze_code_flow", "analyze_code_flow"
+)
+if analyze_code_flow is None:
 
     def analyze_code_flow(file):
         return "Code flow analysis not available"

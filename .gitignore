@@ -18,4 +18,7 @@ docs/sphinx/_build/
 docs/sphinx/api/
 *.swp
 .DS_Store
-.scitex/
+.scitex/*
+!.scitex/dev/
+.scitex/dev/*
+!.scitex/dev/config.yaml
