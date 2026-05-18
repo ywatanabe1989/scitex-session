@@ -14,34 +14,71 @@ import inspect
 
 
 class TestCloseExitStatusMessage:
-    def test_close_source_branches_on_exit_status(self):
-        """Inspect the source to confirm the exit_status branching exists."""
+    def test_close_source_includes_logger_error_call(self):
+        # Arrange
         from scitex_session._lifecycle import _close
 
+        # Act
         src = inspect.getsource(_close)
-        # Both error and info log calls must be present.
+        # Assert
         assert "logger.error" in src
+
+    def test_close_source_includes_logger_info_call(self):
+        # Arrange
+        from scitex_session._lifecycle import _close
+
+        # Act
+        src = inspect.getsource(_close)
+        # Assert
         assert "logger.info" in src
-        # The branch key must be the exit_status value we fixed on.
+
+    def test_close_source_branches_on_exit_status_one(self):
+        # Arrange
+        from scitex_session._lifecycle import _close
+
+        # Act
+        src = inspect.getsource(_close)
+        # Assert
         assert "exit_status == 1" in src
+
+    def test_close_source_branches_on_exit_status_zero(self):
+        # Arrange
+        from scitex_session._lifecycle import _close
+
+        # Act
+        src = inspect.getsource(_close)
+        # Assert
         assert "exit_status == 0" in src
 
-    def test_error_branch_uses_script_failed_message(self):
-        """The FINISHED_ERROR branch must emit 'Script failed' via logger.error,
-        and the success branch must keep the 'Congratulations' wording."""
+    def test_close_source_uses_script_failed_message_text(self):
+        # Arrange
+        from scitex_session._lifecycle import _close
+
+        # Act
+        src = inspect.getsource(_close)
+        # Assert
+        assert "Script failed" in src
+
+    def test_close_source_keeps_success_congratulations_text(self):
+        # Arrange
+        from scitex_session._lifecycle import _close
+
+        # Act
+        src = inspect.getsource(_close)
+        # Assert
+        assert "Congratulations" in src
+
+    def test_close_source_orders_error_branch_before_success_branch(self):
+        # Arrange
         from scitex_session._lifecycle import _close
 
         src = inspect.getsource(_close)
-        assert "Script failed" in src
-        # Success message text is preserved (just the level changed).
-        assert "Congratulations" in src
-        # Error log call should come before the success log call textually
-        # (matches the source's `if exit_status == 1: ... elif == 0: ...`
-        # ordering).
         err_idx = src.find("logger.error")
         succ_idx = src.find("Congratulations")
-        assert err_idx >= 0 and succ_idx >= 0
-        assert err_idx < succ_idx
+        # Act
+        err_first = 0 <= err_idx < succ_idx
+        # Assert
+        assert err_first is True
 
 
 # EOF
