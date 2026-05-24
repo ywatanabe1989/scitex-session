@@ -626,8 +626,9 @@ class TestRunning2Finished:
                 config, exit_status=0, remove_src_dir=False, max_wait=5
             )
             dest_dir = str(result["SDIR_RUN"])
-        # Assert
-        assert os.path.exists(os.path.join(dest_dir, "file1.txt"))
+            # Assert — must run inside the with-block; TemporaryDirectory
+            # deletes the whole tree (including dest_dir) on exit.
+            assert os.path.exists(os.path.join(dest_dir, "file1.txt"))
 
     def test_running2finished_copies_nested_file_to_destination(self):
         # Arrange
@@ -646,8 +647,9 @@ class TestRunning2Finished:
                 config, exit_status=0, remove_src_dir=False, max_wait=5
             )
             dest_dir = str(result["SDIR_RUN"])
-        # Assert
-        assert os.path.exists(os.path.join(dest_dir, "subdir", "file2.txt"))
+            # Assert — must run inside the with-block; TemporaryDirectory
+            # deletes the whole tree (including dest_dir) on exit.
+            assert os.path.exists(os.path.join(dest_dir, "subdir", "file2.txt"))
 
     def test_running2finished_removes_source_dir_when_flag_true(self):
         # Arrange
@@ -780,8 +782,9 @@ class TestStartFunction:
                 verbose=False,
             )
             CONFIG = result[0]
-        # Assert
-        assert os.path.exists(str(CONFIG["SDIR_RUN"]))
+            # Assert — must run inside the with-block; TemporaryDirectory
+            # deletes the whole tree (including SDIR_RUN) on exit.
+            assert os.path.exists(str(CONFIG["SDIR_RUN"]))
 
     def test_start_appends_sdir_suffix_to_run_dir(self):
         # Arrange
@@ -870,7 +873,8 @@ class TestStartFunction:
 
     def test_start_returns_random_state_manager_instance(self):
         # Arrange
-        from scitex.repro import RandomStateManager
+        from scitex_repro import RandomStateManager
+
         from scitex_session._lifecycle import start
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -891,6 +895,7 @@ class TestStartFunction:
     def test_start_returns_non_none_plt_when_pyplot_given(self):
         # Arrange
         import matplotlib.pyplot as plt
+
         from scitex_session._lifecycle import start
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1093,7 +1098,8 @@ class TestPrintHeader:
 
     def test_print_header_with_args_invokes_printc_once(self):
         # Arrange
-        from scitex.dict import DotDict
+        from scitex_dict import DotDict
+
         from scitex_session._lifecycle._utils import print_header
 
         printc = _FakePrintc()
@@ -1116,7 +1122,8 @@ class TestPrintHeader:
 
     def test_print_header_with_args_records_id_in_payload(self):
         # Arrange
-        from scitex.dict import DotDict
+        from scitex_dict import DotDict
+
         from scitex_session._lifecycle._utils import print_header
 
         printc = _FakePrintc()
@@ -1140,7 +1147,8 @@ class TestPrintHeader:
 
     def test_print_header_without_args_renders_arguments_none(self):
         # Arrange
-        from scitex.dict import DotDict
+        from scitex_dict import DotDict
+
         from scitex_session._lifecycle._utils import print_header
 
         printc = _FakePrintc()
@@ -1163,7 +1171,8 @@ class TestPrintHeader:
 
     def test_print_header_invokes_sleep_twice(self):
         # Arrange
-        from scitex.dict import DotDict
+        from scitex_dict import DotDict
+
         from scitex_session._lifecycle._utils import print_header
 
         printc = _FakePrintc()

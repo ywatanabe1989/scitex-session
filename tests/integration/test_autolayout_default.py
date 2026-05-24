@@ -42,13 +42,11 @@ def skill_doc_text():
     """Return the upstream session skill doc text, or skip if the doc is
     absent / does not document the autolayout kwarg / still records the
     pre-fix default."""
-    doc = (
-        Path(
-            inspect.getfile(__import__("scitex.session", fromlist=["_lifecycle"]))
-        ).parent
-        / "_skills"
-        / "lifecycle.md"
-    )
+    try:
+        session_mod = __import__("scitex.session", fromlist=["_lifecycle"])
+    except Exception as exc:  # pragma: no cover - environment-dependent
+        pytest.skip(f"umbrella scitex.session unavailable: {exc}")
+    doc = Path(inspect.getfile(session_mod)).parent / "_skills" / "lifecycle.md"
     if not doc.exists():
         pytest.skip("upstream skill doc not bundled in this env")
     text = doc.read_text()

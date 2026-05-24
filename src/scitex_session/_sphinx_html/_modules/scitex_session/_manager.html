@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scitex_session._manager &mdash; scitex-session 0.1.6 documentation</title>
+  <title>scitex_session._manager &mdash; scitex-session 0.1.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6e0256f3"></script>
+      <script src="../../_static/documentation_options.js?v=22607128"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -45,9 +45,6 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/scitex_session.html">scitex_session</a></li>
 </ul>
 
         </div>
@@ -94,7 +91,7 @@
 
 
 <div class="viewcode-block" id="SessionManager">
-<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_session.SessionManager">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SessionManager</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages experiment sessions with tracking and lifecycle management.&quot;&quot;&quot;</span>
 
@@ -102,7 +99,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">active_sessions</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="SessionManager.create_session">
-<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.create_session">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_session.SessionManager.create_session">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_session</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -140,7 +137,7 @@
 
 
 <div class="viewcode-block" id="SessionManager.close_session">
-<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.close_session">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_session.SessionManager.close_session">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">close_session</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -173,7 +170,7 @@
 
 
 <div class="viewcode-block" id="SessionManager.get_active_sessions">
-<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.get_active_sessions">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_session.SessionManager.get_active_sessions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_active_sessions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all active sessions.</span>
 
@@ -188,7 +185,7 @@
 
 
 <div class="viewcode-block" id="SessionManager.get_session">
-<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.get_session">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_session.SessionManager.get_session">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get specific session information.</span>
 
@@ -206,7 +203,7 @@
 
 
 <div class="viewcode-block" id="SessionManager.list_sessions">
-<a class="viewcode-back" href="../../api/scitex_session.html#scitex_session.SessionManager.list_sessions">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_session.SessionManager.list_sessions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">list_sessions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all sessions (active and closed).</span>
 

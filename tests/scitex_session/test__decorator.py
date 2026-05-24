@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Time-stamp: "2025-11-09"
+# Time-stamp: "2026-05-18"
 # File: ./tests/scitex/session/test__decorator.py
 
-"""Tests for session decorator."""
+"""Tests for session decorator.
+
+Each test follows the AAA (Arrange / Act / Assert) pattern and exercises a
+single behaviour with exactly one assertion so a failure pinpoints the
+contract that broke.
+"""
 
 import pytest
 
@@ -12,169 +17,278 @@ pytest.importorskip("natsort")
 pytest.importorskip("h5py")
 pytest.importorskip("zarr")
 
-import tempfile
-from pathlib import Path
-
 from scitex_session import session
 
 
-class TestSessionDecorator:
-    """Test @session decorator functionality."""
+class TestSessionDecoratorBasics:
+    """Test core session decorator wrapping behaviour."""
 
-    def test_decorator_exists(self):
-        """Test session decorator is importable."""
-        assert callable(session)
+    def test_decorator_symbol_is_callable(self):
+        """The exported `session` symbol is callable so it can be used as a decorator."""
+        # Arrange
+        target = session
+        # Act
+        is_callable = callable(target)
+        # Assert
+        assert is_callable
 
-    def test_decorator_without_args(self):
-        """Test decorator can be used without arguments."""
+    def test_decorator_without_args_marks_wrapped_attribute_true(self):
+        """Bare-form decorator (`@session`) sets `_is_session_wrapped = True` on the wrapper."""
+        # Arrange
 
         @session
         def dummy_func():
             return 0
 
-        assert hasattr(dummy_func, "_is_session_wrapped")
-        assert dummy_func._is_session_wrapped is True
+        # Act
+        marker = dummy_func._is_session_wrapped
+        # Assert
+        assert marker is True
 
-    def test_decorator_with_args(self):
-        """Test decorator can be used with arguments."""
+    def test_decorator_without_args_sets_wrapped_attribute_present(self):
+        """Bare-form decorator attaches the `_is_session_wrapped` attribute to the wrapper."""
+        # Arrange
+
+        @session
+        def dummy_func():
+            return 0
+
+        # Act
+        has_attr = hasattr(dummy_func, "_is_session_wrapped")
+        # Assert
+        assert has_attr
+
+    def test_decorator_with_kwargs_marks_wrapped_attribute_true(self):
+        """Configured form (`@session(verbose=False, agg=True)`) sets the wrapped marker True."""
+        # Arrange
 
         @session(verbose=False, agg=True)
         def dummy_func():
             return 0
 
-        assert hasattr(dummy_func, "_is_session_wrapped")
-        assert dummy_func._is_session_wrapped is True
+        # Act
+        marker = dummy_func._is_session_wrapped
+        # Assert
+        assert marker is True
 
-    def test_decorator_preserves_function_attributes(self):
-        """Test decorator preserves function name and docstring."""
+    def test_decorator_with_kwargs_sets_wrapped_attribute_present(self):
+        """Configured form attaches the `_is_session_wrapped` attribute to the wrapper."""
+        # Arrange
+
+        @session(verbose=False, agg=True)
+        def dummy_func():
+            return 0
+
+        # Act
+        has_attr = hasattr(dummy_func, "_is_session_wrapped")
+        # Assert
+        assert has_attr
+
+    def test_decorator_preserves_function_name(self):
+        """`functools.wraps` carries the original `__name__` through the decorator."""
+        # Arrange
 
         @session
         def my_function():
             """My docstring."""
             return 0
 
-        assert my_function.__name__ == "my_function"
-        assert my_function.__doc__ == """My docstring."""
+        # Act
+        name = my_function.__name__
+        # Assert
+        assert name == "my_function"
 
-    def test_decorator_with_parameters(self):
-        """Test decorator with function parameters."""
+    def test_decorator_preserves_function_docstring(self):
+        """`functools.wraps` carries the original docstring through the decorator."""
+        # Arrange
+
+        @session
+        def my_function():
+            """My docstring."""
+            return 0
+
+        # Act
+        doc = my_function.__doc__
+        # Assert
+        assert doc == "My docstring."
+
+    def test_decorator_accepts_functions_with_typed_parameters(self):
+        """Decorator wraps functions that declare typed positional and keyword parameters."""
+        # Arrange
 
         @session
         def func_with_params(x: int, y: str = "default"):
             """Function with parameters."""
             return 0
 
-        assert hasattr(func_with_params, "_is_session_wrapped")
+        # Act
+        has_attr = hasattr(func_with_params, "_is_session_wrapped")
+        # Assert
+        assert has_attr
 
-    def test_decorator_callable_with_args_bypasses_session(self):
-        """Test calling decorated function with args bypasses session management."""
+    def test_decorator_call_with_args_returns_underlying_return_value(self):
+        """Calling the wrapped function with arguments bypasses session and returns the inner result."""
+        # Arrange
+
+        @session
+        def wrapped_callable(value: int = 1):
+            return value
+
+        # Act
+        result = wrapped_callable(42)
+        # Assert
+        assert result == 42
+
+    def test_decorator_call_with_args_executes_underlying_body(self):
+        """Calling the wrapped function with arguments executes the inner body (no session shortcut)."""
+        # Arrange
         call_count = []
 
         @session
-        def test_func(value: int = 1):
+        def wrapped_callable(value: int = 1):
             call_count.append(value)
             return value
 
-        # Call with arguments - should bypass session management
-        result = test_func(42)
-
-        assert result == 42
+        # Act
+        wrapped_callable(42)
+        # Assert
         assert call_count == [42]
 
-    def test_decorator_stores_original_function(self):
-        """Test decorator stores reference to original function."""
+    def test_decorator_stores_original_function_attribute_present(self):
+        """Wrapper exposes the original function via `_func` so callers can introspect it."""
+        # Arrange
 
         def original():
             return 42
 
+        # Act
         wrapped = session(original)
-
+        # Assert
         assert hasattr(wrapped, "_func")
+
+    def test_decorator_stores_original_function_reference_identity(self):
+        """`wrapper._func` is the exact original function object (identity, not a copy)."""
+        # Arrange
+
+        def original():
+            return 42
+
+        # Act
+        wrapped = session(original)
+        # Assert
         assert wrapped._func is original
 
 
 class TestSessionDecoratorOptions:
-    """Test session decorator configuration options."""
+    """Test session decorator configuration option acceptance."""
 
-    def test_verbose_option(self):
-        """Test verbose parameter."""
+    def test_verbose_option_accepted(self):
+        """`verbose=True` keyword is accepted and produces a wrapped callable."""
+        # Arrange
 
         @session(verbose=True)
         def dummy():
             return 0
 
-        assert hasattr(dummy, "_is_session_wrapped")
+        # Act
+        has_attr = hasattr(dummy, "_is_session_wrapped")
+        # Assert
+        assert has_attr
 
-    def test_agg_option(self):
-        """Test agg parameter."""
+    def test_agg_option_accepted(self):
+        """`agg=False` keyword is accepted and produces a wrapped callable."""
+        # Arrange
 
         @session(agg=False)
         def dummy():
             return 0
 
-        assert hasattr(dummy, "_is_session_wrapped")
+        # Act
+        has_attr = hasattr(dummy, "_is_session_wrapped")
+        # Assert
+        assert has_attr
 
-    def test_notify_option(self):
-        """Test notify parameter."""
+    def test_notify_option_accepted(self):
+        """`notify=True` keyword is accepted and produces a wrapped callable."""
+        # Arrange
 
         @session(notify=True)
         def dummy():
             return 0
 
-        assert hasattr(dummy, "_is_session_wrapped")
+        # Act
+        has_attr = hasattr(dummy, "_is_session_wrapped")
+        # Assert
+        assert has_attr
 
-    def test_sdir_suffix_option(self):
-        """Test sdir_suffix parameter."""
+    def test_sdir_suffix_option_accepted(self):
+        """`sdir_suffix=<str>` keyword is accepted and produces a wrapped callable."""
+        # Arrange
 
         @session(sdir_suffix="custom_suffix")
         def dummy():
             return 0
 
-        assert hasattr(dummy, "_is_session_wrapped")
+        # Act
+        has_attr = hasattr(dummy, "_is_session_wrapped")
+        # Assert
+        assert has_attr
 
-    def test_multiple_options(self):
-        """Test multiple configuration options."""
+    def test_all_options_combined_accepted(self):
+        """All four documented options together are accepted on the same decorator call."""
+        # Arrange
 
         @session(verbose=True, agg=False, notify=True, sdir_suffix="test")
         def dummy():
             return 0
 
-        assert hasattr(dummy, "_is_session_wrapped")
+        # Act
+        has_attr = hasattr(dummy, "_is_session_wrapped")
+        # Assert
+        assert has_attr
 
 
 class TestRunFunction:
-    """Test session.run() function."""
+    """Test the public `run` helper exported alongside the decorator."""
 
-    def test_run_function_exists(self):
-        """Test run function exists."""
+    def test_run_function_is_callable(self):
+        """`scitex_session.run` is exported and callable as a programmatic entry point."""
+        # Arrange
         from scitex_session import run
 
-        assert callable(run)
+        # Act
+        is_callable = callable(run)
+        # Assert
+        assert is_callable
 
 
 class TestDecoratorIntegration:
-    """Integration tests for decorator."""
+    """Integration tests for decorator return-value handling."""
 
-    def test_decorator_with_return_value(self):
-        """Test decorator handles return values."""
+    def test_decorator_returns_computed_value_unchanged(self):
+        """When called with args, the wrapper returns whatever the inner function computed."""
+        # Arrange
 
         @session
         def return_func(value: int = 5):
             return value * 2
 
-        # Call with args to bypass session
+        # Act
         result = return_func(10)
+        # Assert
         assert result == 20
 
-    def test_decorator_with_no_return(self):
-        """Test decorator handles functions with no return."""
+    def test_decorator_returns_none_when_inner_has_no_return(self):
+        """When the inner function has no `return`, the wrapper returns `None`."""
+        # Arrange
 
         @session
         def no_return_func(x: int = 1):
             pass
 
-        # Call with args
+        # Act
         result = no_return_func(5)
+        # Assert
         assert result is None
 
 
