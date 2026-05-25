@@ -93,6 +93,24 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Safety cap (default: 10000). Set to 0 to disable.",
     )
     p_c.add_argument(
+        "--track-bytes",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Compute bytes_in/bytes_out summary by walking each candidate "
+            "(adds per-session overhead; off by default)."
+        ),
+    )
+    p_c.add_argument(
+        "--use-fd",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Use 'fd' subprocess for candidate enumeration when available "
+            "(falls back to Python iterdir+stat otherwise)."
+        ),
+    )
+    p_c.add_argument(
         "--verbose",
         action="store_true",
         help="Verbose logging.",
@@ -139,6 +157,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Safety cap (default: 10000). Set to 0 to disable.",
     )
     p_x.add_argument(
+        "--track-bytes",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="API-symmetric with compress; no-op for extract (no extra walk).",
+    )
+    p_x.add_argument(
         "--verbose",
         action="store_true",
         help="Verbose logging.",
@@ -175,6 +199,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             pattern=args.pattern,
             dry_run=args.dry_run,
             max_dirs=max_dirs,
+            track_bytes=args.track_bytes,
+            use_fd=args.use_fd,
         )
         mode = "dry-run" if args.dry_run else "executed"
         print(_format_summary(f"compress ({mode})", summary))
@@ -189,6 +215,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             remove_archive=args.remove_archive,
             dry_run=args.dry_run,
             max_files=max_files,
+            track_bytes=args.track_bytes,
         )
         mode = "dry-run" if args.dry_run else "executed"
         print(_format_summary(f"extract ({mode})", summary))

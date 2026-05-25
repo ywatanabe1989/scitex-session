@@ -67,17 +67,23 @@ async def archive_existing(
     pattern: Optional[str] = None,
     dry_run: bool = True,
     max_dirs: Optional[int] = None,
+    track_bytes: bool = False,
+    use_fd: bool = True,
 ) -> str:
     """Compress every session-shaped dir under ``root`` into a single archive each.
 
     Mirrors ``scitex_session.archive_existing``. Dry-run by default; pass
-    ``dry_run=False`` to actually write.
+    ``dry_run=False`` to actually write. ``track_bytes=False`` (default)
+    skips the per-session ``dir_size`` accounting; set True when you need
+    ``bytes_in`` / ``bytes_out`` populated. ``use_fd=True`` (default)
+    dispatches candidate enumeration to ``fd`` when installed.
 
     Returns
     -------
     str
         JSON-encoded summary dict with keys
         ``{scanned, candidates, archived, skipped, failed, bytes_in, bytes_out}``.
+        ``bytes_in`` / ``bytes_out`` stay at 0 when ``track_bytes=False``.
     """
     summary = _archive_existing(
         root=root,
@@ -86,6 +92,8 @@ async def archive_existing(
         pattern=pattern,
         dry_run=dry_run,
         max_dirs=max_dirs,
+        track_bytes=track_bytes,
+        use_fd=use_fd,
     )
     return json.dumps(summary)
 
@@ -98,11 +106,14 @@ async def restore_existing(
     remove_archive: bool = False,
     dry_run: bool = True,
     max_files: Optional[int] = None,
+    track_bytes: bool = False,
 ) -> str:
     """Extract every matching archive under ``root`` back into a session directory.
 
     Mirrors ``scitex_session.restore_existing``. Dry-run by default; pass
-    ``dry_run=False`` to actually write.
+    ``dry_run=False`` to actually write. ``track_bytes`` is accepted for
+    API symmetry with ``archive_existing`` but is a no-op here (restore
+    doesn't do an extra dir walk).
 
     Returns
     -------
@@ -117,6 +128,7 @@ async def restore_existing(
         remove_archive=remove_archive,
         dry_run=dry_run,
         max_files=max_files,
+        track_bytes=track_bytes,
     )
     return json.dumps(summary)
 

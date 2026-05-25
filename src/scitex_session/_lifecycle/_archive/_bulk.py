@@ -28,14 +28,32 @@ def archive_existing(
     pattern: Optional[str] = None,
     dry_run: bool = True,
     max_dirs: Optional[int] = None,
+    track_bytes: bool = False,
+    use_fd: bool = True,
 ) -> dict:
     """Bulk compress every session-shaped child of ``root``.
+
+    Parameters
+    ----------
+    track_bytes : bool, default False
+        When True, run a per-candidate ``dir_size()`` (os.walk +
+        getsize per file) so that ``bytes_in`` / ``bytes_out`` in the
+        returned summary are populated. Off by default because the
+        size accounting adds a measurable per-session overhead on top
+        of the mandatory tar IO (observed on neurovista 2026-05-25:
+        80,408 sessions / 47 min wall-clock — the byte stats are a
+        meaningful contributor).
+    use_fd : bool, default True
+        Forwarded to ``iter_session_candidates``. When True and ``fd``
+        is installed, candidate enumeration uses the parallel
+        subprocess path; otherwise the Python ``iterdir+stat`` path.
 
     Returns
     -------
     dict
         Summary {scanned, candidates, archived, skipped, failed,
-        bytes_in, bytes_out}.
+        bytes_in, bytes_out}. ``bytes_in`` and ``bytes_out`` stay at 0
+        when ``track_bytes`` is False.
     """
     root_path = Path(root)
     if not root_path.exists():
@@ -59,7 +77,9 @@ def archive_existing(
     for _entry in root_path.iterdir():
         summary["scanned"] += 1
 
-    for candidate in iter_session_candidates(root_path, older_than_days, pattern):
+    for candidate in iter_session_candidates(
+        root_path, older_than_days, pattern, use_fd=use_fd
+    ):
         archive_path = candidate.parent / (candidate.name + suffix)
         if archive_path.exists():
             summary["skipped"] += 1
@@ -72,35 +92,46 @@ def archive_existing(
             logger.info("Reached max_dirs=%d cap; stopping.", max_dirs)
             break
 
-        try:
-            src_bytes = dir_size(candidate)
-        except OSError:
+        if track_bytes:
+            try:
+                src_bytes = dir_size(candidate)
+            except OSError:
+                src_bytes = 0
+            summary["bytes_in"] += src_bytes
+        else:
             src_bytes = 0
-        summary["bytes_in"] += src_bytes
 
         if dry_run:
-            logger.info(
-                "[dry-run] would archive: %s (%d bytes)", candidate, src_bytes
-            )
+            if track_bytes:
+                logger.info(
+                    "[dry-run] would archive: %s (%d bytes)",
+                    candidate,
+                    src_bytes,
+                )
+            else:
+                logger.info("[dry-run] would archive: %s", candidate)
             continue
 
         try:
             archive_path = archive_session_dir(
                 candidate, format=format, remove_src=True
             )
-            try:
-                out_bytes = archive_path.stat().st_size
-            except OSError:
-                out_bytes = 0
-            summary["bytes_out"] += out_bytes
             summary["archived"] += 1
-            logger.info(
-                "Archived: %s -> %s (%d -> %d bytes)",
-                candidate,
-                archive_path,
-                src_bytes,
-                out_bytes,
-            )
+            if track_bytes:
+                try:
+                    out_bytes = archive_path.stat().st_size
+                except OSError:
+                    out_bytes = 0
+                summary["bytes_out"] += out_bytes
+                logger.info(
+                    "Archived: %s -> %s (%d -> %d bytes)",
+                    candidate,
+                    archive_path,
+                    src_bytes,
+                    out_bytes,
+                )
+            else:
+                logger.info("Archived: %s -> %s", candidate, archive_path)
         except Exception as e:
             summary["failed"] += 1
             logger.warning("Failed to archive %s: %s", candidate, e)
@@ -115,6 +146,7 @@ def restore_existing(
     remove_archive: bool = False,
     dry_run: bool = True,
     max_files: Optional[int] = None,
+    track_bytes: bool = False,
 ) -> dict:
     """Bulk restore every archive matching ``pattern`` directly under ``root``.
 

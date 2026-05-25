@@ -98,12 +98,12 @@ def dir_size(path: Path) -> int:
     return total
 
 
-def iter_session_candidates(
+def iter_session_candidates_python(
     root: Path,
     older_than_days: Optional[float],
     pattern: Optional[str],
 ) -> Iterable[Path]:
-    """Yield direct children of ``root`` that look like session dirs."""
+    """Pure-Python ``iterdir + stat`` enumeration (always available)."""
     now = time.time()
     cutoff = now - older_than_days * 86400.0 if older_than_days else None
     for entry in sorted(root.iterdir()):
@@ -121,6 +121,50 @@ def iter_session_candidates(
             except OSError:
                 continue
         yield entry
+
+
+def iter_session_candidates(
+    root: Path,
+    older_than_days: Optional[float],
+    pattern: Optional[str],
+    use_fd: bool = True,
+) -> Iterable[Path]:
+    """Yield direct children of ``root`` that look like session dirs.
+
+    If ``use_fd=True`` (default) and ``fd`` is installed, dispatches to
+    the parallel-subprocess implementation in ``_speedup.py``. On any
+    fd failure the function falls back to the pure-Python path
+    transparently. ``use_fd=False`` forces the Python path (useful in
+    tests and when debugging fd output).
+    """
+    if use_fd:
+        try:
+            # Local import to avoid a hard dep on the speedup module
+            # during collection / cyclic-import edge cases.
+            from ._speedup import (
+                FdNotAvailableError,
+                HAS_FD,
+                iter_session_candidates_fd,
+            )
+
+            if HAS_FD:
+                try:
+                    candidates = iter_session_candidates_fd(
+                        root, older_than_days, pattern
+                    )
+                    yield from candidates
+                    return
+                except FdNotAvailableError:
+                    pass
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(
+                        "fd fast-path failed (%s); falling back to Python iterdir+stat.",
+                        e,
+                    )
+        except Exception as e:  # noqa: BLE001
+            logger.debug("_speedup import failed: %s; using Python path.", e)
+
+    yield from iter_session_candidates_python(root, older_than_days, pattern)
 
 
 # EOF
