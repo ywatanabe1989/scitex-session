@@ -34,6 +34,16 @@ autodoc_default_options = {
     "exclude-members": "__weakref__,__init__,__dict__,__module__",
 }
 
+# Quiet "duplicate object description" warnings from the package's
+# top-level re-exports (start/close/session/run/running2finished + the
+# four archive helpers) which appear both in `scitex_session` and in
+# their submodules. autodoc resolves both descriptions and -W treats
+# this as an error in PR builds.
+suppress_warnings = [
+    "autodoc.duplicate_object_description",
+    "ref.duplicate",
+]
+
 # Heavy/optional deps mocked so RTD can build without installing them.
 autodoc_mock_imports = [""]
 
@@ -41,6 +51,11 @@ autosummary_generate = True
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
+# Render "Example:" sections as RST admonitions instead of inline
+# paragraph + code blocks. This sidesteps the "Unexpected indentation"
+# errors that arise when Google-style ``Example:`` is followed directly
+# by indented code (as in `scitex_session._decorator.session`).
+napoleon_use_admonition_for_examples = True
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
