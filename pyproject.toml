@@ -28,6 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+mcp = ["fastmcp>=2.0"]
 dev = [
     "joblib",
     "flask",
@@ -41,6 +42,10 @@ dev = [
     "h5py",
     "zarr",
     "natsort",
+    # tests/scitex_session/test_mcp_server.py uses importorskip so it
+    # also stays green without this, but listing it here means
+    # `pip install -e .[dev]` exercises the MCP surface in CI.
+    "fastmcp>=2.0",
 ]
 docs = [
     "sphinx>=7.0",
@@ -50,8 +55,14 @@ docs = [
     "sphinx-autodoc-typehints>=1.25",
 ]
 all = [
-    "scitex-session[dev,docs]",
+    "scitex-session[dev,docs,mcp]",
 ]
+
+[project.scripts]
+# Argparse CLI for the archive helpers — see scitex_session/archive.py.
+scitex-session-archive = "scitex_session.archive:main"
+# Stdio MCP server — requires the `mcp` extra (fastmcp).
+scitex-session-mcp = "scitex_session._mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/ywatanabe1989/scitex-session"

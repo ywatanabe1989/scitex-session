@@ -4,8 +4,8 @@ description: `@session` decorator for reproducible experiment lifecycle. Wrap `d
 primary_interface: python
 interfaces:
   python: 3
-  cli: 1
-  mcp: 0
+  cli: 2
+  mcp: 2
   skills: 2
   hook: 0
   http: 0
@@ -13,7 +13,7 @@ canonical-location: scitex-session/src/scitex_session/_skills/scitex-session/SKI
 tags: [scitex-session, scitex-package]
 ---
 
-> **Interfaces:** Python ⭐⭐⭐ · CLI ⭐ · MCP — · Skills ⭐⭐ · Hook — · HTTP —
+> **Interfaces:** Python ⭐⭐⭐ · CLI ⭐⭐ · MCP ⭐⭐ · Skills ⭐⭐ · Hook — · HTTP —
 
 # scitex-session
 
@@ -24,3 +24,5 @@ tags: [scitex-session, scitex-package]
 - [01_installation.md](01_installation.md) — pip install, standalone vs umbrella, verify
 - [02_quick-start.md](02_quick-start.md) — first `@session` in 30 seconds
 - [03_python-api.md](03_python-api.md) — decorator, `start`/`close`, `SessionManager`, `INJECTED`
+- [04_cli-reference.md](04_cli-reference.md) — `scitex-session-archive {compress,extract}`
+- [05_mcp-tools.md](05_mcp-tools.md) — six FastMCP tools (4 archive helpers + skills envelope)
