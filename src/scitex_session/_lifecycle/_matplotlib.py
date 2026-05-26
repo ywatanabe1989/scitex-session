@@ -37,9 +37,7 @@ if is_headless:
 
 from scitex_dev import try_import_optional
 
-_configure_mpl = try_import_optional(
-    "figrecipe.utils._configure_mpl", "configure_mpl"
-)
+_configure_mpl = try_import_optional("figrecipe.utils._configure_mpl", "configure_mpl")
 if _configure_mpl is None:
     # No-op fallback when figrecipe (an optional dev/visualization dep)
     # isn't installed. configure_mpl normally tunes rcParams + colors via
@@ -89,9 +87,14 @@ def setup_matplotlib(
                 "during module initialization for headless environment"
             )
 
-        # Replace matplotlib.pyplot with scitex.plt to get wrapped functions
-        import scitex_plt as stx_plt
-
+        # Replace matplotlib.pyplot with scitex.plt to get wrapped
+        # functions when available. scitex-plt is an optional visualization
+        # dep — not a hard requirement of scitex-session — so fall back to
+        # the plain pyplot module when it isn't installed (mirrors the
+        # figrecipe.configure_mpl fallback above).
+        stx_plt = try_import_optional("scitex_plt")
+        if stx_plt is None:
+            return plt, COLORS
         return stx_plt, COLORS
     return plt, None
 
