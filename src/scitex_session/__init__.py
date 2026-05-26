@@ -65,7 +65,15 @@ INJECTED = _InjectedSentinel()
 # Import session management functionality
 # Use refactored _lifecycle subpackage (verification hooks included)
 from ._decorator import run, session
-from ._lifecycle import close, running2finished, start
+from ._lifecycle import (
+    archive_existing,
+    archive_session_dir,
+    close,
+    restore_existing,
+    restore_session_archive,
+    running2finished,
+    start,
+)
 from ._manager import SessionManager
 
 # Export public API
@@ -82,6 +90,11 @@ __all__ = [
     "run",
     # Advanced session management
     "SessionManager",
+    # Archive helpers (bidirectional)
+    "archive_session_dir",
+    "restore_session_archive",
+    "archive_existing",
+    "restore_existing",
 ]
 
 # EOF
