@@ -23,7 +23,7 @@ def main(param1="default",
          CONFIG=sess.INJECTED,
          plt=sess.INJECTED,
          logger=sess.INJECTED,
-         rng=sess.INJECTED):
+         rngg=sess.INJECTED):
     return 0
 ```
 
@@ -40,7 +40,7 @@ Sentinel sigil for parameters the decorator should fill. Distinct from
 Manual lifecycle when the decorator is too rigid:
 
 ```python
-CONFIG, plt, logger, rng = sess.start()
+CONFIG, plt, logger, rngg = sess.start()
 try:
     ...
 finally:
