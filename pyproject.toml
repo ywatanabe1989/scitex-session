@@ -81,6 +81,10 @@ scitex-session = "scitex_session"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--disable-warnings"]
+# Test the in-tree source so a worktree/checkout always exercises its own
+# code, taking precedence over any stale editable-install `.pth` that may
+# point at a different checkout sharing this venv.
+pythonpath = ["src"]
 
 [tool.coverage.run]
 parallel = true

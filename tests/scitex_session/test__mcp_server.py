@@ -19,7 +19,7 @@ import pytest
 # Skip the whole module if the optional `fastmcp` dep is not present.
 pytest.importorskip("fastmcp")
 
-from fastmcp import FastMCP  # noqa: E402  (after importorskip)
+from fastmcp import Client, FastMCP  # noqa: E402  (after importorskip)
 
 
 def _session_name(token: str = "MCP0") -> str:
@@ -38,25 +38,44 @@ def _make_session_dir(parent: Path, name: str) -> Path:
 
 
 def _list_tool_names() -> set[str]:
-    """Synchronously list tool names on the module-level mcp instance."""
+    """Synchronously list tool names on the module-level mcp instance.
+
+    Uses the canonical FastMCP 2.x in-memory ``Client`` to exercise the
+    server (the public ``mcp.list_tools()`` method was removed in
+    FastMCP 2.12+; ``Client`` is the supported test entry point).
+    """
     from scitex_session._mcp_server import mcp
 
-    tools = asyncio.run(mcp.list_tools())
-    return {t.name for t in tools}
+    async def _run():
+        async with Client(mcp) as client:
+            tools = await client.list_tools()
+            return {t.name for t in tools}
+
+    return asyncio.run(_run())
 
 
 def _call_tool(name: str, **kwargs):
     """Invoke a tool on the module-level mcp instance and normalise the result.
 
-    FastMCP 2.x vs 3.x return slightly different result shapes; this
-    helper collapses both to the underlying JSON payload (a dict) so
-    tests have a single assertion target.
+    Uses the in-memory FastMCP 2.x ``Client``. ``call_tool`` returns a
+    ``CallToolResult``; ``.data`` is the deserialised return value
+    (e.g. a dict), which is the single assertion target for the tests.
+    Falls back to ``structured_content`` / text content blocks for
+    robustness across result shapes.
     """
     from scitex_session._mcp_server import mcp
 
     async def _run():
-        result = await mcp.call_tool(name, kwargs)
-        # FastMCP 3.x: structured_content with optional {"result": "<json>"}.
+        async with Client(mcp) as client:
+            result = await client.call_tool(name, kwargs)
+        # ``.data`` is the deserialised return value. These tools declare a
+        # ``str`` return type and emit a JSON string, so decode it to a dict.
+        data = getattr(result, "data", None)
+        if data is not None:
+            if isinstance(data, str):
+                return json.loads(data)
+            return data
+        # structured_content with optional {"result": "<json>"}.
         sc = getattr(result, "structured_content", None)
         if sc:
             if (
@@ -67,15 +86,12 @@ def _call_tool(name: str, **kwargs):
                 return json.loads(sc["result"])
             if isinstance(sc, dict):
                 return sc
-        # FastMCP content blocks (any version).
+        # Text content blocks.
         blocks = getattr(result, "content", None)
         if blocks:
             text = getattr(blocks[0], "text", None)
             if text:
                 return json.loads(text)
-        # FastMCP 2.x bare string.
-        if isinstance(result, str):
-            return json.loads(result)
         raise AssertionError(f"unexpected call_tool result shape: {type(result)!r}")
 
     return asyncio.run(_run())
