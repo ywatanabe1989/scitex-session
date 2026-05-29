@@ -81,6 +81,10 @@ scitex-session = "scitex_session"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--disable-warnings"]
+# Test the in-tree source so a worktree/checkout always exercises its own
+# code, taking precedence over any stale editable-install `.pth` that may
+# point at a different checkout sharing this venv.
+pythonpath = ["src"]
 
 [tool.coverage.run]
 parallel = true
@@ -97,3 +101,12 @@ ignore = ["E501"]
 
 [tool.scitex-linter]
 library_dirs = ["src", "tests", "examples", "apps", "config", "docs"]
+
+[tool.scitex_dev]
+# scitex-session's public API is mostly decorators / context managers
+# (`session`, `module`, `run`, `close`) and the `SessionManager` class —
+# Python-only constructs with no sensible MCP-tool counterpart. The MCP
+# server exposes only the agent-callable operations (finalize_session,
+# archive_*/restore_*, skills_*). That legitimate API↔tool asymmetry is the
+# documented §6 mcp-parity exemption case.
+mcp_parity_exempt = true

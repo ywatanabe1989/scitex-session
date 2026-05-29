@@ -36,8 +36,14 @@ except ImportError as e:  # pragma: no cover -- exercised only when extra missin
 
 from ._lifecycle._archive import (
     archive_existing as _archive_existing,
+)
+from ._lifecycle._archive import (
     archive_session_dir as _archive_session_dir,
+)
+from ._lifecycle._archive import (
     restore_existing as _restore_existing,
+)
+from ._lifecycle._archive import (
     restore_session_archive as _restore_session_archive,
 )
 from ._lifecycle._close import running2finished as _running2finished
@@ -177,7 +183,7 @@ async def restore_session_archive(
 
 
 @mcp.tool()
-async def running2finished(
+async def finalize_session(
     config: dict,
     exit_status: Optional[int] = None,
     remove_src_dir: bool = True,

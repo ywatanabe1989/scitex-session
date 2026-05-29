@@ -7,7 +7,9 @@
 from __future__ import annotations
 
 try:
-    from importlib.metadata import version as _v, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _v
+
     try:
         __version__ = _v("scitex-session")
     except PackageNotFoundError:
@@ -62,19 +64,53 @@ class _InjectedSentinel:
 INJECTED = _InjectedSentinel()
 
 
-# Import session management functionality
-# Use refactored _lifecycle subpackage (verification hooks included)
-from ._decorator import run, session
-from ._lifecycle import (
-    archive_existing,
-    archive_session_dir,
-    close,
-    restore_existing,
-    restore_session_archive,
-    running2finished,
-    start,
-)
-from ._manager import SessionManager
+# Lazy attribute map: public name -> (submodule, attr in submodule).
+# Heavy imports (matplotlib / figrecipe / pandas / scitex_io) live behind
+# these submodules and are deferred until first access (PEP 562). A bare
+# ``import scitex_session`` previously pulled _lifecycle -> _start ->
+# _matplotlib, which imported matplotlib + figrecipe (pyplot) + pandas at
+# module scope (~3.6s). Deferring them keeps cold import well under the
+# scitex-dev §10 budget (<500ms).
+_LAZY_ATTRS = {
+    # Session decorator (new simplified API)
+    "session": ("._decorator", "session"),
+    "run": ("._decorator", "run"),
+    # Session lifecycle (main functions)
+    "start": ("._lifecycle", "start"),
+    "close": ("._lifecycle", "close"),
+    "running2finished": ("._lifecycle", "running2finished"),
+    # Archive helpers (bidirectional)
+    "archive_session_dir": ("._lifecycle", "archive_session_dir"),
+    "restore_session_archive": ("._lifecycle", "restore_session_archive"),
+    "archive_existing": ("._lifecycle", "archive_existing"),
+    "restore_existing": ("._lifecycle", "restore_existing"),
+    # Advanced session management
+    "SessionManager": ("._manager", "SessionManager"),
+}
+
+
+def __getattr__(name: str):
+    """PEP 562 lazy-loader: import on first access, cache, return.
+
+    The matplotlib ``Agg`` backend side-effect for headless/WSL lives in
+    ``_lifecycle/_matplotlib.py`` and therefore fires the first time any
+    session function is resolved here — which is also the first time pyplot
+    is imported — so backend ordering is preserved.
+    """
+    spec = _LAZY_ATTRS.get(name)
+    if spec is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
+    mod_name, attr_name = spec
+    attr = getattr(import_module(mod_name, __name__), attr_name)
+    globals()[name] = attr  # cache for subsequent accesses
+    return attr
+
+
+def __dir__() -> list[str]:
+    return sorted(set(_LAZY_ATTRS) | set(globals()))
+
 
 # Export public API
 __all__ = [

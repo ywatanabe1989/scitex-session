@@ -21,7 +21,7 @@ versions follow [Semantic Versioning](https://semver.org/).
   copytree behaviour bit-for-bit.
 - **MCP server** (`scitex_session._mcp_server.mcp`, FastMCP-based) with 6
   tools: `archive_compress`, `archive_extract`, `archive_single`,
-  `restore_single`, `running2finished`, plus the §5 `skills_list` /
+  `restore_single`, `finalize_session`, plus the §5 `skills_list` /
   `skills_get` envelope.
 - **CLI**: `python -m scitex_session.archive {compress,extract} <root>`
   plus the `scitex-session-archive` and `scitex-session-mcp` console
