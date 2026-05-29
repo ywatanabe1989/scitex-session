@@ -101,3 +101,12 @@ ignore = ["E501"]
 
 [tool.scitex-linter]
 library_dirs = ["src", "tests", "examples", "apps", "config", "docs"]
+
+[tool.scitex_dev]
+# scitex-session's public API is mostly decorators / context managers
+# (`session`, `module`, `run`, `close`) and the `SessionManager` class —
+# Python-only constructs with no sensible MCP-tool counterpart. The MCP
+# server exposes only the agent-callable operations (finalize_session,
+# archive_*/restore_*, skills_*). That legitimate API↔tool asymmetry is the
+# documented §6 mcp-parity exemption case.
+mcp_parity_exempt = true
