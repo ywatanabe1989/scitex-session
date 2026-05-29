@@ -87,6 +87,7 @@ class TestMcpInstance:
     def test_mcp_is_fastmcp_instance(self):
         # Arrange
         from scitex_session._mcp_server import mcp
+
         # Act
         is_instance = isinstance(mcp, FastMCP)
         # Assert
@@ -95,6 +96,7 @@ class TestMcpInstance:
     def test_mcp_server_name_is_scitex_session(self):
         # Arrange
         from scitex_session._mcp_server import mcp
+
         # Act
         name = getattr(mcp, "name", None) or getattr(mcp, "_name", None)
         # Assert
@@ -103,6 +105,7 @@ class TestMcpInstance:
     def test_main_entrypoint_is_callable(self):
         # Arrange
         from scitex_session._mcp_server import main
+
         # Act
         ok = callable(main)
         # Assert
@@ -140,16 +143,16 @@ class TestRegisteredTools:
         # Assert
         assert "restore_session_archive" in names
 
-    def test_running2finished_tool_is_registered(self):
-        # Arrange — running2finished is a lifecycle-state helper but
-        # exposed as an MCP tool so the §6 Python-API ↔ MCP parity rule
-        # has the canonical 5/9 → 4/9 missing coverage. Useful as a
-        # maintenance tool: move a stuck RUNNING/<session>/ dir into
-        # FINISHED_{SUCCESS,ERROR}/.
+    def test_finalize_session_tool_is_registered(self):
+        # Arrange — finalize_session (underlying running2finished) is a
+        # lifecycle-state helper but exposed as an MCP tool so the §6
+        # Python-API ↔ MCP parity rule has the canonical 5/9 → 4/9
+        # missing coverage. Useful as a maintenance tool: move a stuck
+        # RUNNING/<session>/ dir into FINISHED_{SUCCESS,ERROR}/.
         # Act
         names = _list_tool_names()
         # Assert
-        assert "running2finished" in names
+        assert "finalize_session" in names
 
     def test_skills_list_registered(self):
         # Arrange — §5 mandates `skills_list` on every SciTeX MCP server.
