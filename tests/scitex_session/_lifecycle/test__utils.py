@@ -148,6 +148,46 @@ class TestGetDebugMode:
         # Assert
         assert isinstance(result, bool)
 
+    def test_get_debug_mode_does_not_print_stale_load_module_path(
+        self, tmp_path, capsys
+    ):
+        # Regression: the helper used to `import scitex_io._load`, a private
+        # module that was renamed to scitex_io._loading._load. The failed
+        # import was caught but `print(e)` leaked
+        # "(No module named scitex_io._load)" to stdout at every session
+        # start. Repointing to the public `scitex_io.load` re-export must
+        # leave stdout clean.
+        # Arrange
+        from scitex_session._lifecycle._utils import get_debug_mode
+
+        original_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Act
+            get_debug_mode()
+        finally:
+            os.chdir(original_cwd)
+        captured = capsys.readouterr()
+        # Assert
+        assert "scitex_io._load" not in captured.out
+
+    def test_get_debug_mode_does_not_print_import_error(self, tmp_path, capsys):
+        # Regression companion: no "No module named ..." import-error noise
+        # should reach stdout at session start (see sibling test).
+        # Arrange
+        from scitex_session._lifecycle._utils import get_debug_mode
+
+        original_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Act
+            get_debug_mode()
+        finally:
+            os.chdir(original_cwd)
+        captured = capsys.readouterr()
+        # Assert
+        assert "No module named" not in captured.out
+
 
 class TestGetScitexVersion:
     """Tests for get_scitex_version helper function."""
@@ -390,6 +430,27 @@ class TestSetupMatplotlib:
         has_gray_alias = "gray" in colors
         # Assert
         assert has_gray_alias is True
+
+    def test_setup_matplotlib_injected_axes_supports_set_xyt(self):
+        # Regression (clew P4_figure): the injected ``plt`` must expose the
+        # scitex/figrecipe wrapper whose Axes provides the documented
+        # ``set_xyt(...)`` convenience. Before scitex-plt became a hard
+        # dependency, setup_matplotlib silently fell back to plain pyplot
+        # and figure-saving sessions died with
+        # "'Axes' object has no attribute 'set_xyt'".
+        # Arrange
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        from scitex_session._lifecycle._matplotlib import setup_matplotlib
+
+        injected_plt, _ = setup_matplotlib(plt=plt)
+        # Act
+        _fig, ax = injected_plt.subplots()
+        # Assert
+        assert hasattr(ax, "set_xyt")
 
 
 class TestArgsToStr:
@@ -1191,6 +1252,71 @@ class TestPrintHeader:
         )
         # Assert
         assert len(sleep_fake.durations) == 2
+
+
+class TestSessionFigureSave:
+    """End-to-end regression for the session figure-save path (clew P4).
+
+    A ``@session``-decorated script that builds a figure with the injected
+    ``plt`` (using the documented ``ax.set_xyt`` convenience) and saves it
+    via scitex_io must complete without error and write the PNG.
+    """
+
+    def test_session_figure_save_writes_png(self, tmp_path):
+        # Arrange
+        import matplotlib
+
+        matplotlib.use("Agg")
+        pytest.importorskip("matplotlib")
+        import numpy as np
+
+        from scitex_session._lifecycle import close, start
+
+        sdir = os.path.join(str(tmp_path), "fig_out", "RUNNING", "fig_session")
+        import matplotlib.pyplot as plt
+
+        CONFIG, _, _, injected_plt, _, _ = start(
+            sys=None,
+            plt=plt,
+            file="/tmp/test_fig.py",
+            sdir=sdir,
+            verbose=False,
+        )
+        png_path = os.path.join(str(tmp_path), "squared.png")
+        # Act
+        fig, ax = injected_plt.subplots()
+        ax.plot(np.arange(5), np.arange(5) ** 2)
+        ax.set_xyt("x", "y^2", "squared")  # would AttributeError on plain pyplot
+        import scitex_io
+
+        scitex_io.save(fig, png_path, verbose=False)
+        close(CONFIG, verbose=False, exit_status=0)
+        # Assert
+        assert os.path.exists(png_path)
+
+    def test_session_injected_axes_has_set_xyt(self, tmp_path):
+        # Arrange
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        from scitex_session._lifecycle import close, start
+
+        sdir = os.path.join(str(tmp_path), "fig_out2", "RUNNING", "fig_session2")
+        CONFIG, _, _, injected_plt, _, _ = start(
+            sys=None,
+            plt=plt,
+            file="/tmp/test_fig2.py",
+            sdir=sdir,
+            verbose=False,
+        )
+        # Act
+        _fig, ax = injected_plt.subplots()
+        has_set_xyt = hasattr(ax, "set_xyt")
+        close(CONFIG, verbose=False, exit_status=0)
+        # Assert
+        assert has_set_xyt is True
 
 
 if __name__ == "__main__":
