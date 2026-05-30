@@ -30,7 +30,6 @@ CROSS_PACKAGE_IMPORTS = [
     "scitex_gen._detect_notebook_path",
     "scitex_io",
     "scitex_io._flush",
-    "scitex_io._load",
     "scitex_io._save",
     "scitex_logging",
     "scitex_repro",
