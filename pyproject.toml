@@ -20,6 +20,12 @@ classifiers = [
 ]
 dependencies = [
     "matplotlib",
+    # The session injects ``plt`` as the scitex/figrecipe wrapper so that
+    # decorated scripts can use the documented convenience API (e.g.
+    # ``ax.set_xyt(...)``). Without scitex-plt installed, setup_matplotlib
+    # silently fell back to plain pyplot whose Axes lacks ``set_xyt``,
+    # breaking every figure-saving session (clew P4_figure regression).
+    "scitex-plt>=0.24.0",
     "scitex-dict>=0.1.0",
     "scitex-logging>=0.1.0",
     "scitex-repro>=0.1.0",
