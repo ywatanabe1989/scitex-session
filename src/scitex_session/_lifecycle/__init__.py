@@ -11,6 +11,12 @@ This package contains the split modules from the original _lifecycle.py:
 - _utils.py: Utility functions
 """
 
+from ._archive import (
+    archive_existing,
+    archive_session_dir,
+    restore_existing,
+    restore_session_archive,
+)
 from ._close import close, running2finished
 from ._start import start
 
@@ -18,6 +24,10 @@ __all__ = [
     "start",
     "close",
     "running2finished",
+    "archive_session_dir",
+    "restore_session_archive",
+    "archive_existing",
+    "restore_existing",
 ]
 
 # EOF

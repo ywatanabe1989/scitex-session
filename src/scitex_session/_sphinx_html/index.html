@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scitex-session &mdash; scitex-session 0.1.8 documentation</title>
+  <title>scitex-session &mdash; scitex-session 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=22607128"></script>
+      <script src="_static/documentation_options.js?v=37f418d5"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -75,9 +75,10 @@
              
   <section id="scitex-session">
 <h1>scitex-session<a class="headerlink" href="#scitex-session" title="Link to this heading"></a></h1>
-<p>Reproducible experiment-session framework (<code class="docutils literal notranslate"><span class="pre">&#64;session</span></code> decorator,
-auto-CLI, config injection, structured output) extracted from the
-SciTeX ecosystem as a standalone package.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&#64;stx.session</span></code> decorator + lifecycle management. Parse CLI args from a
+function signature, configure logging + matplotlib, run the function,
+write outputs to <code class="docutils literal notranslate"><span class="pre">script_out/&lt;status&gt;/&lt;session_id&gt;/</span></code> (or a single
+<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> when <code class="docutils literal notranslate"><span class="pre">archive_format</span></code> is set), and clean up on exit.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -88,6 +89,10 @@ SciTeX ecosystem as a standalone package.</p>
 <li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.session"><code class="docutils literal notranslate"><span class="pre">session()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.SessionManager"><code class="docutils literal notranslate"><span class="pre">SessionManager</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.archive_session_dir"><code class="docutils literal notranslate"><span class="pre">archive_session_dir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.restore_session_archive"><code class="docutils literal notranslate"><span class="pre">restore_session_archive()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.archive_existing"><code class="docutils literal notranslate"><span class="pre">archive_existing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#scitex_session.restore_existing"><code class="docutils literal notranslate"><span class="pre">restore_existing()</span></code></a></li>
 </ul>
 </li>
 </ul>

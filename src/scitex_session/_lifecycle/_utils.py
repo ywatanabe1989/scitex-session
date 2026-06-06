@@ -8,10 +8,10 @@ from __future__ import annotations
 import os as _os
 import re
 from datetime import datetime
+from logging import getLogger
 from time import sleep
 from typing import Any, Dict, Tuple
 
-from logging import getLogger
 from scitex_repro import gen_ID
 from scitex_str import printc as _printc
 
@@ -32,7 +32,11 @@ def get_scitex_version() -> str:
 def get_debug_mode() -> bool:
     """Get debug mode from configuration."""
     try:
-        from scitex_io._load import load
+        # Use the public re-export. The private module was renamed
+        # (scitex_io._load -> scitex_io._loading._load), so importing the
+        # old private path raised ImportError and printed spurious
+        # "(No module named scitex_io._load)" noise at every session start.
+        from scitex_io import load
 
         IS_DEBUG_PATH = "./config/IS_DEBUG.yaml"
         if _os.path.exists(IS_DEBUG_PATH):

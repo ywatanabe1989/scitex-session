@@ -33,7 +33,13 @@ from ._utils import args_to_str, escape_ansi_from_log_files, process_timestamp
 logger = getLogger(__name__)
 
 
-def running2finished(CONFIG, exit_status=None, remove_src_dir=True, max_wait=60):
+def running2finished(
+    CONFIG,
+    exit_status=None,
+    remove_src_dir=True,
+    max_wait=60,
+    archive_format=None,
+):
     """Move session from RUNNING to FINISHED directory.
 
     Parameters
@@ -46,6 +52,10 @@ def running2finished(CONFIG, exit_status=None, remove_src_dir=True, max_wait=60)
         Whether to remove source directory after copy
     max_wait : int, default=60
         Maximum seconds to wait for copy operation
+    archive_format : str, optional
+        If set (e.g. "tar.gz"), replace the FINISHED dest dir with a
+        single archive file (1 inode instead of N). ``None`` (default)
+        preserves the original copytree-only behavior bit-for-bit.
 
     Returns
     -------
@@ -104,6 +114,27 @@ def running2finished(CONFIG, exit_status=None, remove_src_dir=True, max_wait=60)
             print(f"Copy operation timed out after {max_wait} seconds")
 
         CONFIG["SDIR_RUN"] = Path(dest_dir)
+
+        # Opt-in: collapse the FINISHED/<session>/ dir into a single
+        # FINISHED/<session>.tar.gz archive. ``archive_format=None``
+        # keeps the original behavior unchanged.
+        if archive_format is not None and _os.path.isdir(dest_dir):
+            try:
+                from ._archive import archive_session_dir
+
+                archive_path = archive_session_dir(
+                    dest_dir,
+                    format=archive_format,
+                    remove_src=True,
+                )
+                CONFIG["SDIR_RUN"] = Path(archive_path)
+            except Exception as e:
+                logger.warning(
+                    "archive_format=%r failed for %s: %s",
+                    archive_format,
+                    dest_dir,
+                    e,
+                )
     except Exception as e:
         print(e)
 
@@ -111,7 +142,14 @@ def running2finished(CONFIG, exit_status=None, remove_src_dir=True, max_wait=60)
         return CONFIG
 
 
-def close(CONFIG, message=":)", notify=False, verbose=True, exit_status=None):
+def close(
+    CONFIG,
+    message=":)",
+    notify=False,
+    verbose=True,
+    exit_status=None,
+    archive_format=None,
+):
     """Close experiment session and finalize logging.
 
     Parameters
@@ -126,6 +164,10 @@ def close(CONFIG, message=":)", notify=False, verbose=True, exit_status=None):
         Whether to print verbose output
     exit_status : int, optional
         Exit status code (0=success, 1=error, None=finished)
+    archive_format : str, optional
+        If set (e.g. "tar.gz"), replace the FINISHED dest dir with a
+        single archive file. ``None`` (default) preserves the original
+        copytree-only behavior bit-for-bit.
     """
     # Stop verification tracking first
     _stop_verification(exit_status)
@@ -142,8 +184,24 @@ def close(CONFIG, message=":)", notify=False, verbose=True, exit_status=None):
 
         save_configs(CONFIG)
 
+        # If archive_format wasn't passed explicitly, fall back to
+        # ``CONFIG.SESSION.ARCHIVE_FORMAT`` if it's been set via user
+        # config. Keeps backward compat when nothing is set.
+        effective_archive_format = archive_format
+        if effective_archive_format is None:
+            try:
+                session_cfg = CONFIG.get("SESSION")
+                if isinstance(session_cfg, dict):
+                    effective_archive_format = session_cfg.get("ARCHIVE_FORMAT")
+            except Exception:
+                effective_archive_format = None
+
         # RUNNING to FINISHED
-        CONFIG = running2finished(CONFIG, exit_status=exit_status)
+        CONFIG = running2finished(
+            CONFIG,
+            exit_status=exit_status,
+            archive_format=effective_archive_format,
+        )
 
         # ANSI code escape
         log_files = _glob(str(CONFIG["SDIR_RUN"]) + "logs/*.log")

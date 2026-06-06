@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scitex-session"
-version = "0.1.8"
+version = "0.2.1"
 description = "@session decorator + lifecycle (auto-CLI, output dir tree, RandomStateManager) — standalone module from the SciTeX ecosystem"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -20,6 +20,12 @@ classifiers = [
 ]
 dependencies = [
     "matplotlib",
+    # The session injects ``plt`` as the scitex/figrecipe wrapper so that
+    # decorated scripts can use the documented convenience API (e.g.
+    # ``ax.set_xyt(...)``). Without scitex-plt installed, setup_matplotlib
+    # silently fell back to plain pyplot whose Axes lacks ``set_xyt``,
+    # breaking every figure-saving session (clew P4_figure regression).
+    "scitex-plt>=0.24.0",
     "scitex-dict>=0.1.0",
     "scitex-logging>=0.1.0",
     "scitex-repro>=0.1.0",
@@ -28,6 +34,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+mcp = ["fastmcp>=2.0"]
 dev = [
     "joblib",
     "flask",
@@ -41,6 +48,10 @@ dev = [
     "h5py",
     "zarr",
     "natsort",
+    # tests/scitex_session/test_mcp_server.py uses importorskip so it
+    # also stays green without this, but listing it here means
+    # `pip install -e .[dev]` exercises the MCP surface in CI.
+    "fastmcp>=2.0",
 ]
 docs = [
     "sphinx>=7.0",
@@ -50,8 +61,14 @@ docs = [
     "sphinx-autodoc-typehints>=1.25",
 ]
 all = [
-    "scitex-session[dev,docs]",
+    "scitex-session[dev,docs,mcp]",
 ]
+
+[project.scripts]
+# Argparse CLI for the archive helpers — see scitex_session/archive.py.
+scitex-session-archive = "scitex_session.archive:main"
+# Stdio MCP server — requires the `mcp` extra (fastmcp).
+scitex-session-mcp = "scitex_session._mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/ywatanabe1989/scitex-session"
@@ -70,6 +87,10 @@ scitex-session = "scitex_session"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--disable-warnings"]
+# Test the in-tree source so a worktree/checkout always exercises its own
+# code, taking precedence over any stale editable-install `.pth` that may
+# point at a different checkout sharing this venv.
+pythonpath = ["src"]
 
 [tool.coverage.run]
 parallel = true
@@ -86,3 +107,12 @@ ignore = ["E501"]
 
 [tool.scitex-linter]
 library_dirs = ["src", "tests", "examples", "apps", "config", "docs"]
+
+[tool.scitex_dev]
+# scitex-session's public API is mostly decorators / context managers
+# (`session`, `module`, `run`, `close`) and the `SessionManager` class —
+# Python-only constructs with no sensible MCP-tool counterpart. The MCP
+# server exposes only the agent-callable operations (finalize_session,
+# archive_*/restore_*, skills_*). That legitimate API↔tool asymmetry is the
+# documented §6 mcp-parity exemption case.
+mcp_parity_exempt = true

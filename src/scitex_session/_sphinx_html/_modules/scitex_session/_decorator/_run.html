@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_session._decorator._run &mdash; scitex-session 0.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=37f418d5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            scitex-session
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scitex-session</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scitex_session._decorator._run</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scitex_session._decorator._run</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Timestamp: &quot;2026-05-26 (ywatanabe)&quot;</span>
+<span class="c1"># File: src/scitex_session/_decorator/_run.py</span>
+<span class="sd">&quot;&quot;&quot;CLI execution path for the @stx.session decorator.</span>
+
+<span class="sd">Holds ``_run_with_session`` (the decorator&#39;s CLI dispatcher) and</span>
+<span class="sd">``run`` (the imperative alternative). Both call into ``_cli`` for</span>
+<span class="sd">argparse generation and ``_lifecycle`` for start/close.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sys_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">getLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">INJECTED</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.._lifecycle</span><span class="w"> </span><span class="kn">import</span> <span class="n">close</span><span class="p">,</span> <span class="n">start</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">_create_parser</span>
+
+<span class="c1"># Internal logger for the decorator itself.</span>
+<span class="n">_decorator_logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_with_session</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">agg</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">notify</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">sdir_suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">archive_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">session_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a function with full session management.</span>
+
+<span class="sd">    This is the CLI execution path invoked by :func:`session` when the</span>
+<span class="sd">    decorated function is called with no arguments. It generates the</span>
+<span class="sd">    argparse from the function signature, starts a session, executes</span>
+<span class="sd">    the function with injected globals, then closes the session.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the calling file (two frames up: wrapper -&gt; _run_with_session).</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+    <span class="n">caller_frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_back</span><span class="o">.</span><span class="n">f_back</span>
+    <span class="n">caller_file</span> <span class="o">=</span> <span class="n">caller_frame</span><span class="o">.</span><span class="n">f_globals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__file__&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown.py&quot;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">_create_parser</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="c1"># Clean up INJECTED sentinels from args before passing to session.</span>
+    <span class="n">cleaned_args</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">(</span>
+        <span class="o">**</span><span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">INJECTED</span><span class="p">))</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="n">CONFIG</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">COLORS</span><span class="p">,</span> <span class="n">rngg</span> <span class="o">=</span> <span class="n">start</span><span class="p">(</span>
+        <span class="n">sys</span><span class="o">=</span><span class="n">sys_module</span><span class="p">,</span>
+        <span class="n">plt</span><span class="o">=</span><span class="n">plt</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="n">cleaned_args</span><span class="p">,</span>
+        <span class="n">file</span><span class="o">=</span><span class="n">caller_file</span><span class="p">,</span>
+        <span class="n">sdir_suffix</span><span class="o">=</span><span class="n">sdir_suffix</span> <span class="ow">or</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="n">agg</span><span class="o">=</span><span class="n">agg</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">session_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Logger for the user&#39;s script.</span>
+    <span class="n">script_logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__module__</span><span class="p">)</span>
+
+    <span class="c1"># Inject session variables into the wrapped function&#39;s globals.</span>
+    <span class="n">func_globals</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__globals__</span>
+    <span class="n">func_globals</span><span class="p">[</span><span class="s2">&quot;CONFIG&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CONFIG</span>
+    <span class="n">func_globals</span><span class="p">[</span><span class="s2">&quot;plt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plt</span>
+    <span class="n">func_globals</span><span class="p">[</span><span class="s2">&quot;COLORS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">COLORS</span>
+    <span class="n">func_globals</span><span class="p">[</span><span class="s2">&quot;rngg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rngg</span>
+    <span class="n">func_globals</span><span class="p">[</span><span class="s2">&quot;logger&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">script_logger</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Injected Global Variables (available in your function):&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  • CONFIG - Session configuration dict&quot;</span><span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      - CONFIG[&#39;ID&#39;]: </span><span class="si">{</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;      - CONFIG[&#39;SDIR_RUN&#39;]: </span><span class="si">{</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;SDIR_RUN&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      - CONFIG[&#39;PID&#39;]: </span><span class="si">{</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;PID&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;  • plt - matplotlib.pyplot (configured for session)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;  • COLORS - CustomColors (for consistent plotting)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;  • rngg - RandomStateManager (for reproducibility)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;  • logger - SciTeX logger (configured for your script)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="n">func_params</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="n">injection_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;CONFIG&quot;</span><span class="p">:</span> <span class="n">CONFIG</span><span class="p">,</span>
+            <span class="s2">&quot;plt&quot;</span><span class="p">:</span> <span class="n">plt</span><span class="p">,</span>
+            <span class="s2">&quot;COLORS&quot;</span><span class="p">:</span> <span class="n">COLORS</span><span class="p">,</span>
+            <span class="s2">&quot;rngg&quot;</span><span class="p">:</span> <span class="n">rngg</span><span class="p">,</span>
+            <span class="s2">&quot;logger&quot;</span><span class="p">:</span> <span class="n">script_logger</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">filtered_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># First, add all parsed CLI arguments.</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">func_params</span><span class="p">:</span>
+                <span class="n">filtered_kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="c1"># Then, inject parameters that have INJECTED as default.</span>
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="o">!=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">INJECTED</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">injection_map</span><span class="p">:</span>
+                    <span class="n">filtered_kwargs</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">injection_map</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">args_summary</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">filtered_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with injected parameters:&quot;</span>
+            <span class="p">)</span>
+            <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">args_summary</span><span class="p">,</span> <span class="n">pprint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Execute function.</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">**</span><span class="n">filtered_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Map int returns to exit status.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">exit_status</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Error in </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">raise</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># Close session with error handling.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">close</span><span class="p">(</span>
+                <span class="n">CONFIG</span><span class="o">=</span><span class="n">CONFIG</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">notify</span><span class="o">=</span><span class="n">notify</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> completed&quot;</span><span class="p">,</span>
+                <span class="n">exit_status</span><span class="o">=</span><span class="n">exit_status</span><span class="p">,</span>
+                <span class="n">archive_format</span><span class="o">=</span><span class="n">archive_format</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">SystemExit</span><span class="p">:</span>
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session cleanup error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session cleanup error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Final matplotlib cleanup (belt and suspenders).</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_plt</span>
+
+            <span class="n">_plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="run">
+<a class="viewcode-back" href="../../../api.html#scitex_session.run">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">parse_args</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">session_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a function with session management — explicit alternative to ``@session``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    func : callable</span>
+<span class="sd">        Function to run.</span>
+<span class="sd">    parse_args : callable, optional</span>
+<span class="sd">        Custom argument parser. If ``None``, an argparse parser is</span>
+<span class="sd">        auto-generated from ``func``&#39;s signature via :func:`_create_parser`.</span>
+<span class="sd">    **session_kwargs</span>
+<span class="sd">        Forwarded to ``scitex_session.start`` / ``close``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Exit status. ``0`` on success; non-zero on failure (also re-raised).</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        def main(args):</span>
+<span class="sd">            # ... your code ...</span>
+<span class="sd">            return 0</span>
+
+<span class="sd">        if __name__ == &#39;__main__&#39;:</span>
+<span class="sd">            stx.session.run(main)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parse_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">_create_parser</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+    <span class="n">caller_frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_back</span>
+    <span class="n">caller_file</span> <span class="o">=</span> <span class="n">caller_frame</span><span class="o">.</span><span class="n">f_globals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__file__&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown.py&quot;</span><span class="p">)</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="n">CONFIG</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">COLORS</span><span class="p">,</span> <span class="n">rngg</span> <span class="o">=</span> <span class="n">start</span><span class="p">(</span>
+        <span class="n">sys</span><span class="o">=</span><span class="n">sys_module</span><span class="p">,</span>
+        <span class="n">plt</span><span class="o">=</span><span class="n">plt</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+        <span class="n">file</span><span class="o">=</span><span class="n">caller_file</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">session_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">exit_status</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">&quot;__dict__&quot;</span><span class="p">):</span>
+            <span class="n">exit_status</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exit_status</span> <span class="o">=</span> <span class="n">func</span><span class="p">()</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="n">exit_status</span> <span class="ow">or</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">_decorator_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">raise</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">close</span><span class="p">(</span>
+            <span class="n">CONFIG</span><span class="o">=</span><span class="n">CONFIG</span><span class="p">,</span>
+            <span class="n">exit_status</span><span class="o">=</span><span class="n">exit_status</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">session_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exit_status</span></div>
+
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scitex_session._lifecycle._close &mdash; scitex-session 0.1.8 documentation</title>
+  <title>scitex_session._lifecycle._close &mdash; scitex-session 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=22607128"></script>
+      <script src="../../../_static/documentation_options.js?v=37f418d5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -109,7 +109,13 @@
 
 <div class="viewcode-block" id="running2finished">
 <a class="viewcode-back" href="../../../api.html#scitex_session.running2finished">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">running2finished</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">,</span> <span class="n">exit_status</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">remove_src_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_wait</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">running2finished</span><span class="p">(</span>
+    <span class="n">CONFIG</span><span class="p">,</span>
+    <span class="n">exit_status</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_src_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">max_wait</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+    <span class="n">archive_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Move session from RUNNING to FINISHED directory.</span>
 
 <span class="sd">    Parameters</span>
@@ -122,6 +128,10 @@
 <span class="sd">        Whether to remove source directory after copy</span>
 <span class="sd">    max_wait : int, default=60</span>
 <span class="sd">        Maximum seconds to wait for copy operation</span>
+<span class="sd">    archive_format : str, optional</span>
+<span class="sd">        If set (e.g. &quot;tar.gz&quot;), replace the FINISHED dest dir with a</span>
+<span class="sd">        single archive file (1 inode instead of N). ``None`` (default)</span>
+<span class="sd">        preserves the original copytree-only behavior bit-for-bit.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -180,6 +190,27 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copy operation timed out after </span><span class="si">{</span><span class="n">max_wait</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
 
         <span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;SDIR_RUN&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">)</span>
+
+        <span class="c1"># Opt-in: collapse the FINISHED/&lt;session&gt;/ dir into a single</span>
+        <span class="c1"># FINISHED/&lt;session&gt;.tar.gz archive. ``archive_format=None``</span>
+        <span class="c1"># keeps the original behavior unchanged.</span>
+        <span class="k">if</span> <span class="n">archive_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">._archive</span><span class="w"> </span><span class="kn">import</span> <span class="n">archive_session_dir</span>
+
+                <span class="n">archive_path</span> <span class="o">=</span> <span class="n">archive_session_dir</span><span class="p">(</span>
+                    <span class="n">dest_dir</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="n">archive_format</span><span class="p">,</span>
+                    <span class="n">remove_src</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;SDIR_RUN&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">archive_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;archive_format=</span><span class="si">%r</span><span class="s2"> failed for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">archive_format</span><span class="p">,</span>
+                    <span class="n">dest_dir</span><span class="p">,</span>
+                    <span class="n">e</span><span class="p">,</span>
+                <span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
@@ -190,7 +221,14 @@
 
 <div class="viewcode-block" id="close">
 <a class="viewcode-back" href="../../../api.html#scitex_session.close">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;:)&quot;</span><span class="p">,</span> <span class="n">notify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exit_status</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span>
+    <span class="n">CONFIG</span><span class="p">,</span>
+    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;:)&quot;</span><span class="p">,</span>
+    <span class="n">notify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">exit_status</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">archive_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Close experiment session and finalize logging.</span>
 
 <span class="sd">    Parameters</span>
@@ -205,6 +243,10 @@
 <span class="sd">        Whether to print verbose output</span>
 <span class="sd">    exit_status : int, optional</span>
 <span class="sd">        Exit status code (0=success, 1=error, None=finished)</span>
+<span class="sd">    archive_format : str, optional</span>
+<span class="sd">        If set (e.g. &quot;tar.gz&quot;), replace the FINISHED dest dir with a</span>
+<span class="sd">        single archive file. ``None`` (default) preserves the original</span>
+<span class="sd">        copytree-only behavior bit-for-bit.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Stop verification tracking first</span>
     <span class="n">_stop_verification</span><span class="p">(</span><span class="n">exit_status</span><span class="p">)</span>
@@ -221,8 +263,24 @@
 
         <span class="n">save_configs</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">)</span>
 
+        <span class="c1"># If archive_format wasn&#39;t passed explicitly, fall back to</span>
+        <span class="c1"># ``CONFIG.SESSION.ARCHIVE_FORMAT`` if it&#39;s been set via user</span>
+        <span class="c1"># config. Keeps backward compat when nothing is set.</span>
+        <span class="n">effective_archive_format</span> <span class="o">=</span> <span class="n">archive_format</span>
+        <span class="k">if</span> <span class="n">effective_archive_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">session_cfg</span> <span class="o">=</span> <span class="n">CONFIG</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SESSION&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_cfg</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">effective_archive_format</span> <span class="o">=</span> <span class="n">session_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ARCHIVE_FORMAT&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">effective_archive_format</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="c1"># RUNNING to FINISHED</span>
-        <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">running2finished</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">,</span> <span class="n">exit_status</span><span class="o">=</span><span class="n">exit_status</span><span class="p">)</span>
+        <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">running2finished</span><span class="p">(</span>
+            <span class="n">CONFIG</span><span class="p">,</span>
+            <span class="n">exit_status</span><span class="o">=</span><span class="n">exit_status</span><span class="p">,</span>
+            <span class="n">archive_format</span><span class="o">=</span><span class="n">effective_archive_format</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="c1"># ANSI code escape</span>
         <span class="n">log_files</span> <span class="o">=</span> <span class="n">_glob</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;SDIR_RUN&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;logs/*.log&quot;</span><span class="p">)</span>
