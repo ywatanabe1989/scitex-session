@@ -26,6 +26,7 @@ dependencies = [
     # silently fell back to plain pyplot whose Axes lacks ``set_xyt``,
     # breaking every figure-saving session (clew P4_figure regression).
     "scitex-plt>=0.24.0",
+    "scitex-context>=0.1.0",
     "scitex-dict>=0.1.0",
     "scitex-logging>=0.1.0",
     "scitex-repro>=0.1.0",

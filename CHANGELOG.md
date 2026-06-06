@@ -7,6 +7,14 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- refactor: migrate `get_notebook_path` import in `_lifecycle/_start.py`
+  from the private `scitex_gen._detect_notebook_path` path to the public
+  `scitex_context` API (Phase B of the scitex-gen full retirement wave).
+- tests(integration): replace `scitex_gen._detect_notebook_path` with
+  `scitex_context` in the cross-package import gate.
+- deps: add `scitex-context>=0.1.0` to runtime dependencies. scitex-gen
+  was never a declared dep, so nothing to remove.
+
 ## [0.2.0] — 2026-05-26
 
 ### Added

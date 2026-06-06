@@ -111,7 +111,7 @@ def start(
             caller_file = inspect.stack()[1].filename
             if "ipython" in caller_file.lower():
                 try:
-                    from scitex_gen._detect_notebook_path import get_notebook_path
+                    from scitex_context import get_notebook_path
 
                     nb_path = get_notebook_path()
                     caller_file = (
