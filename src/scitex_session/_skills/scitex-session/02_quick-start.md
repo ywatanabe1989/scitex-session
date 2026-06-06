@@ -18,7 +18,7 @@ def main(
     CONFIG=sess.INJECTED,      # Loaded from ./config/*.yaml
     plt=sess.INJECTED,         # Pre-configured matplotlib
     logger=sess.INJECTED,      # Session logger
-    rng=sess.INJECTED,         # Reproducible RandomStateManager
+    rngg=sess.INJECTED,        # Reproducible RandomStateManager
 ):
     """Docstring becomes --help."""
     logger.info("hi")
@@ -40,7 +40,7 @@ python my_script.py --param1 foo
 1. Parses `def main(...)` parameters as CLI flags.
 2. Loads `./config/*.yaml` into `CONFIG` (a `DotDict`).
 3. Configures matplotlib (`plt`) and stdlib `logging` (`logger`).
-4. Seeds a reproducible `RandomStateManager` (`rng`).
+4. Seeds a reproducible `RandomStateManager` (`rngg`).
 5. Runs the wrapped function.
 6. Writes outputs under `script_out/FINISHED_SUCCESS/<session_id>/`
    (or `FINISHED_FAILURE/` on exception).
@@ -52,7 +52,7 @@ If the decorator's contract doesn't fit, drive it yourself:
 ```python
 import scitex_session as sess
 
-CONFIG, plt, logger, rng = sess.start()
+CONFIG, plt, logger, rngg = sess.start()
 try:
     ...
 finally:
