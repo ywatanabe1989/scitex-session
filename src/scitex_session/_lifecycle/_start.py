@@ -8,11 +8,11 @@ from __future__ import annotations
 import inspect
 import logging
 import os as _os
+from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 from scitex_dict import DotDict
-from logging import getLogger
 from scitex_repro import RandomStateManager
 from scitex_str import clean_path
 
@@ -111,7 +111,7 @@ def start(
             caller_file = inspect.stack()[1].filename
             if "ipython" in caller_file.lower():
                 try:
-                    from scitex_gen._detect_notebook_path import get_notebook_path
+                    from scitex_context import get_notebook_path
 
                     nb_path = get_notebook_path()
                     caller_file = (
@@ -148,7 +148,6 @@ def start(
     # Logging
     if sys is not None:
         from scitex_io._flush import flush
-
         from scitex_logging import tee
 
         flush(sys)
