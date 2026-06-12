@@ -116,3 +116,8 @@ library_dirs = ["src", "tests", "examples", "apps", "config", "docs"]
 # archive_*/restore_*, skills_*). That legitimate API↔tool asymmetry is the
 # documented §6 mcp-parity exemption case.
 mcp_parity_exempt = true
+
+dependencies = [
+    "scitex-dev>=0.17.8",
+    "click>=8.1",
+]
