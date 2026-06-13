@@ -8,11 +8,11 @@ from __future__ import annotations
 import inspect
 import logging
 import os as _os
+from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 from scitex_dict import DotDict
-from logging import getLogger
 from scitex_repro import RandomStateManager
 from scitex_str import clean_path
 
@@ -39,6 +39,102 @@ if analyze_code_flow is None:
 
     def analyze_code_flow(file):
         return "Code flow analysis not available"
+
+
+# Top-level module-name prefixes whose frames belong to the SciTeX
+# session/dev plumbing (decorators, wrappers, MCP bridges, …). When
+# walking the call stack to find the *user's* script we skip frames
+# whose module name starts with any of these — they are intermediate
+# wrappers, not the real caller. ``scitex_session`` self-skip handles
+# the @stx.session wrapper chain; ``scitex_dev`` handles agent /
+# harness / decorator layers that wrap @stx.session further. We match
+# on module names (via ``inspect.getmodule``) rather than filename
+# substrings so that the ``tests/scitex_session/`` test tree (whose
+# *files* contain ``/scitex_session/`` but whose *module* names are
+# ``tests.scitex_session.…``) is not falsely flagged as internal.
+_INTERNAL_MODULE_PREFIXES: Tuple[str, ...] = (
+    "scitex_session.",
+    "scitex_session",
+    "scitex_dev.",
+    "scitex_dev",
+)
+
+
+def _is_internal_module_name(modname: Optional[str]) -> bool:
+    """Return True iff ``modname`` is a scitex_session / scitex_dev
+    plumbing module (i.e. an intermediate wrapper frame, not the
+    user's script)."""
+    if not modname:
+        return False
+    return any(
+        modname == prefix.rstrip(".") or modname.startswith(prefix)
+        for prefix in _INTERNAL_MODULE_PREFIXES
+    )
+
+
+def _is_internal_frame_file(path: str) -> bool:
+    """Filename-based fallback used when a frame has no resolvable
+    module (e.g. dynamically-exec'd code). Matches an *installed* or
+    src-tree package path — does NOT match ``tests/scitex_session/``
+    paths because those are below a ``tests`` parent, not a package
+    init."""
+    if not path:
+        return True
+    norm = path.replace("\\", "/")
+    # Match "/scitex_session/_..." or "/scitex_dev/_..." (underscored
+    # internal submodules), or "/site-packages/scitex_session/" /
+    # "/site-packages/scitex_dev/" (installed package frames). The
+    # tests/scitex_session/ tree does NOT match either pattern.
+    for pkg in ("scitex_session", "scitex_dev"):
+        if f"/site-packages/{pkg}/" in norm:
+            return True
+        if f"/src/{pkg}/" in norm:
+            return True
+    return False
+
+
+def _find_user_caller_file(hint: Optional[str] = None) -> str:
+    """Resolve the user's script path by walking the call stack outward.
+
+    Walks ``inspect.stack()`` from innermost to outermost and returns
+    the filename of the first frame whose module name does NOT start
+    with ``scitex_session`` / ``scitex_dev`` (i.e. is not an
+    intermediate plumbing frame). The optional ``hint`` (typically the
+    ``file=`` parameter that the @stx.session wrapper threads through)
+    is used when it is a non-internal path; if the hint itself points
+    at an internal wrapper file (the bug operator hit on neurovista —
+    the figure landed in ``site-packages/.../decorators_out/`` because
+    the wrapper's ``__file__`` was used) we discard it and walk
+    instead.
+
+    Falls back to a stable sentinel only if no user frame can be found
+    (deep notebook / -c invocation); the existing IPython branch in
+    :func:`start` handles those cases after this returns.
+    """
+    if hint and not _is_internal_frame_file(hint):
+        return hint
+
+    for frame_info in inspect.stack():
+        candidate = frame_info.filename or ""
+        # Skip transient stdlib / runpy frames that are also not the user.
+        if candidate.startswith("<"):  # "<string>", "<stdin>", "<frozen ...>"
+            continue
+        mod = inspect.getmodule(frame_info.frame)
+        modname = getattr(mod, "__name__", None)
+        if _is_internal_module_name(modname):
+            continue
+        # When the frame has no resolvable module (rare; dynamically
+        # exec'd code), fall back to the filename heuristic.
+        if modname is None and _is_internal_frame_file(candidate):
+            continue
+        return candidate
+
+    # No user frame located; preserve previous behaviour and fall back
+    # to whatever the innermost non-self frame was.
+    stack = inspect.stack()
+    if len(stack) > 1:
+        return stack[1].filename
+    return hint or "unknown.py"
 
 
 def start(
@@ -104,21 +200,30 @@ def start(
 
     # Defines SDIR
     if sdir is None:
-        # Define __file__
-        if file:
-            caller_file = file
-        else:
-            caller_file = inspect.stack()[1].filename
-            if "ipython" in caller_file.lower():
-                try:
-                    from scitex_gen._detect_notebook_path import get_notebook_path
+        # Define __file__.
+        #
+        # The naive `inspect.stack()[1].filename` (and the analogous
+        # `frame.f_back` walk in the @stx.session wrapper) lands on the
+        # internal scitex_session / scitex_dev wrapper frame when the
+        # user's script is wrapped through one or more decorator layers
+        # (operator-observed: figures saving to
+        # ``site-packages/.../decorators_out/`` instead of
+        # ``<user_script>_out/``). Walk the stack OUTWARD to the first
+        # frame whose filename is NOT inside a scitex_session /
+        # scitex_dev source path — that's the real user script. The
+        # ``file=`` parameter (when supplied by a callsite that already
+        # knows the user's path, e.g. notebook integrations) is used as
+        # a hint, but if it still points at an internal scitex frame
+        # we override it with the walked result.
+        caller_file = _find_user_caller_file(hint=file)
+        if "ipython" in caller_file.lower():
+            try:
+                from scitex_gen._detect_notebook_path import get_notebook_path
 
-                    nb_path = get_notebook_path()
-                    caller_file = (
-                        nb_path if nb_path else f"/tmp/{_os.getenv('USER')}.py"
-                    )
-                except Exception:
-                    caller_file = f"/tmp/{_os.getenv('USER')}.py"
+                nb_path = get_notebook_path()
+                caller_file = nb_path if nb_path else f"/tmp/{_os.getenv('USER')}.py"
+            except Exception:
+                caller_file = f"/tmp/{_os.getenv('USER')}.py"
 
         # Convert to absolute path if relative and resolve symlinks
         if not _os.path.isabs(caller_file):
@@ -148,7 +253,6 @@ def start(
     # Logging
     if sys is not None:
         from scitex_io._flush import flush
-
         from scitex_logging import tee
 
         flush(sys)

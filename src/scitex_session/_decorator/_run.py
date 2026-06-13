@@ -41,21 +41,26 @@ def _run_with_session(
     argparse from the function signature, starts a session, executes
     the function with injected globals, then closes the session.
     """
-    # Get the calling file (two frames up: wrapper -> _run_with_session).
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back.f_back
-    caller_file = caller_frame.f_globals.get("__file__", "unknown.py")
+    # Get the calling file by walking the call stack outward past every
+    # scitex_session / scitex_dev wrapper frame to the *user's* script.
+    # The previous ``frame.f_back.f_back`` heuristic landed on the
+    # @stx.session wrapper frame whenever an outer scitex_dev decorator
+    # (or any extra wrapping layer) was present, so save() then resolved
+    # ``__file__`` to scitex_session/_decorator/_run.py and figures
+    # routed to ``site-packages/.../decorators_out/`` instead of the
+    # user's ``<script>_out/``. ``_find_user_caller_file`` shares the
+    # same outward-walk used inside :func:`start`, so both paths land on
+    # exactly the same user-script filename.
+    from .._lifecycle._start import _find_user_caller_file
+
+    caller_file = _find_user_caller_file()
 
     parser = _create_parser(func)
     args = parser.parse_args()
 
     # Clean up INJECTED sentinels from args before passing to session.
     cleaned_args = argparse.Namespace(
-        **{
-            k: v
-            for k, v in vars(args).items()
-            if not isinstance(v, type(INJECTED))
-        }
+        **{k: v for k, v in vars(args).items() if not isinstance(v, type(INJECTED))}
     )
 
     import matplotlib.pyplot as plt
@@ -89,19 +94,11 @@ def _run_with_session(
         )
         _decorator_logger.info("  • CONFIG - Session configuration dict")
         _decorator_logger.info(f"      - CONFIG['ID']: {CONFIG['ID']}")
-        _decorator_logger.info(
-            f"      - CONFIG['SDIR_RUN']: {CONFIG['SDIR_RUN']}"
-        )
+        _decorator_logger.info(f"      - CONFIG['SDIR_RUN']: {CONFIG['SDIR_RUN']}")
         _decorator_logger.info(f"      - CONFIG['PID']: {CONFIG['PID']}")
-        _decorator_logger.info(
-            "  • plt - matplotlib.pyplot (configured for session)"
-        )
-        _decorator_logger.info(
-            "  • COLORS - CustomColors (for consistent plotting)"
-        )
-        _decorator_logger.info(
-            "  • rngg - RandomStateManager (for reproducibility)"
-        )
+        _decorator_logger.info("  • plt - matplotlib.pyplot (configured for session)")
+        _decorator_logger.info("  • COLORS - CustomColors (for consistent plotting)")
+        _decorator_logger.info("  • rngg - RandomStateManager (for reproducibility)")
         _decorator_logger.info(
             "  • logger - SciTeX logger (configured for your script)"
         )
@@ -140,12 +137,8 @@ def _run_with_session(
                     filtered_kwargs[param_name] = injection_map[param_name]
 
         if verbose:
-            args_summary = {
-                k: type(v).__name__ for k, v in filtered_kwargs.items()
-            }
-            _decorator_logger.info(
-                f"Running {func.__name__} with injected parameters:"
-            )
+            args_summary = {k: type(v).__name__ for k, v in filtered_kwargs.items()}
+            _decorator_logger.info(f"Running {func.__name__} with injected parameters:")
             _decorator_logger.info(args_summary, pprint=True, indent=2)
 
         # Execute function.
@@ -158,9 +151,7 @@ def _run_with_session(
             exit_status = 0
 
     except Exception as e:
-        _decorator_logger.error(
-            f"Error in {func.__name__}: {e}", exc_info=True
-        )
+        _decorator_logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
         exit_status = 1
         raise
 
@@ -233,9 +224,12 @@ def run(
     else:
         args = parse_args()
 
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back
-    caller_file = caller_frame.f_globals.get("__file__", "unknown.py")
+    # See _run_with_session above for the rationale on walking outward
+    # past scitex_session / scitex_dev wrapper frames instead of
+    # blindly using ``frame.f_back``.
+    from .._lifecycle._start import _find_user_caller_file
+
+    caller_file = _find_user_caller_file()
 
     import matplotlib.pyplot as plt
 
