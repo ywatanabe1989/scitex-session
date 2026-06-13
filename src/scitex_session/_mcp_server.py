@@ -42,87 +42,73 @@ from ._lifecycle._close import running2finished as _running2finished
 __all__ = ["mcp", "main"]
 
 
-class _LazyFastMCP:
-    """Lazy proxy for ``fastmcp.FastMCP`` that defers the ``fastmcp``
-    import until the proxy is actually used.
+# Lazy MCP server construction. We defer the ``fastmcp`` import (which
+# is an optional extra — see ``[project.optional-dependencies].mcp``)
+# to first-use to keep bare ``pip install scitex-session`` valid (no
+# unmet runtime dep on the ``scitex-session-mcp`` console-script
+# reachability chain). PS-213 ``core-cli-dep-missing`` then passes.
+#
+# How:
+# - Tool functions are decorated with the local ``_tool(**kw)`` recorder
+#   that simply appends ``(func, kw)`` to ``_PENDING_TOOLS`` at module
+#   load. ``fastmcp`` is NOT imported here.
+# - The module-level name ``mcp`` is resolved by PEP-562 ``__getattr__``
+#   on first access: it imports ``fastmcp.FastMCP``, instantiates the
+#   real server, replays every pending tool registration onto it, and
+#   caches + returns the real instance. Subsequent accesses return the
+#   cached instance directly.
+# - Consumers (``from scitex_session._mcp_server import mcp``,
+#   ``mcp.run(...)``, the umbrella ``safe_mount`` path) see a real
+#   ``FastMCP`` instance — same public type and contract as before.
 
-    Why
-    ---
-    ``fastmcp`` lives in ``[project.optional-dependencies].mcp`` — bare
-    ``pip install scitex-session`` does NOT pull it. The previous
-    module-level ``from fastmcp import FastMCP`` + ``mcp = FastMCP(...)``
-    made the ``scitex-session-mcp`` console script unimportable on a
-    bare install (and tripped PS-213 ``core-cli-dep-missing`` in the
-    ecosystem audit, since the entry point ``scitex_session._mcp_server:main``
-    transitively re-imports the module at console-script time).
-
-    The proxy
-    ---------
-    Records ``@mcp.tool()`` decorations at module-load WITHOUT importing
-    ``fastmcp``. The real ``FastMCP`` instance — and the ``fastmcp``
-    import that creates it — is materialised on the FIRST real-method
-    access (typically ``mcp.run(...)`` inside :func:`main`). At that
-    point we also replay the recorded registrations onto the real
-    instance so every ``@mcp.tool()``-decorated function ends up
-    registered exactly as if ``mcp`` had been the real instance from
-    the start.
-
-    Public surface kept identical
-    -----------------------------
-    Module consumers (``from scitex_session._mcp_server import mcp``)
-    and umbrella mounts (``scitex._mcp.safe_mount(mcp, namespace=...)``)
-    interact with the proxy via ``getattr``; all attribute access
-    forwards to the materialised real instance, so they behave the same.
-    """
-
-    def __init__(self, **init_kwargs: Any) -> None:
-        self._init_kwargs = init_kwargs
-        self._pending_tools: list[tuple[Any, dict[str, Any]]] = []
-        self._real: Any = None
-
-    def tool(self, **deco_kwargs: Any) -> Any:
-        """Mimic ``FastMCP.tool()`` decorator factory — record only."""
-
-        def _decorator(func: Any) -> Any:
-            self._pending_tools.append((func, deco_kwargs))
-            return func
-
-        return _decorator
-
-    def _materialise(self) -> Any:
-        if self._real is not None:
-            return self._real
-        try:
-            from fastmcp import FastMCP
-        except ImportError as e:
-            raise ImportError(
-                "scitex-session MCP server requires the `fastmcp` package. "
-                "Install with: pip install 'scitex-session[mcp]' "
-                "(or `pip install fastmcp>=2.0` directly)."
-            ) from e
-        instance = FastMCP(**self._init_kwargs)
-        for func, deco_kwargs in self._pending_tools:
-            instance.tool(**deco_kwargs)(func)
-        self._real = instance
-        return instance
-
-    def __getattr__(self, name: str) -> Any:
-        # ``tool`` and the internal attributes are resolved by normal
-        # attribute lookup (set via __init__ / defined as methods).
-        # Everything else (``.run``, ``.name``, ``.list_tools``, …) is
-        # forwarded to the materialised real instance.
-        return getattr(self._materialise(), name)
-
-
-mcp = _LazyFastMCP(
-    name="scitex-session",
-    instructions=(
-        "Tools for compressing and restoring scitex session directories. "
-        "Each session-dir under FINISHED_SUCCESS becomes a single .tar.gz "
-        "(1 inode vs 7) and the reverse extracts it back to a directory. "
-        "Tool names mirror the public Python API in scitex_session."
-    ),
+_INSTRUCTIONS = (
+    "Tools for compressing and restoring scitex session directories. "
+    "Each session-dir under FINISHED_SUCCESS becomes a single .tar.gz "
+    "(1 inode vs 7) and the reverse extracts it back to a directory. "
+    "Tool names mirror the public Python API in scitex_session."
 )
+
+_PENDING_TOOLS: list[tuple[Any, dict[str, Any]]] = []
+_MCP_CACHE: Any = None
+
+
+def _tool(**deco_kwargs: Any) -> Any:
+    """Lightweight recorder that takes the place of ``@_tool()`` at
+    module load, so the real FastMCP instantiation can be deferred."""
+
+    def _decorator(func: Any) -> Any:
+        _PENDING_TOOLS.append((func, deco_kwargs))
+        return func
+
+    return _decorator
+
+
+def _build_mcp() -> Any:
+    global _MCP_CACHE
+    if _MCP_CACHE is not None:
+        return _MCP_CACHE
+    try:
+        from fastmcp import FastMCP
+    except ImportError as e:
+        raise ImportError(
+            "scitex-session MCP server requires the `fastmcp` package. "
+            "Install with: pip install 'scitex-session[mcp]' "
+            "(or `pip install fastmcp>=2.0` directly)."
+        ) from e
+    instance = FastMCP(name="scitex-session", instructions=_INSTRUCTIONS)
+    for func, deco_kwargs in _PENDING_TOOLS:
+        instance.tool(**deco_kwargs)(func)
+    _MCP_CACHE = instance
+    return instance
+
+
+def __getattr__(name: str) -> Any:
+    """PEP-562 module ``__getattr__``: materialise ``mcp`` on first access."""
+    if name == "mcp":
+        return _build_mcp()
+    raise AttributeError(
+        f"module 'scitex_session._mcp_server' has no attribute {name!r}"
+    )
 
 
 # --------------------------------------------------------------------- #
@@ -130,7 +116,7 @@ mcp = _LazyFastMCP(
 # --------------------------------------------------------------------- #
 
 
-@mcp.tool()
+@_tool()
 async def archive_existing(
     root: str,
     older_than_days: Optional[float] = None,
@@ -169,7 +155,7 @@ async def archive_existing(
     return json.dumps(summary)
 
 
-@mcp.tool()
+@_tool()
 async def restore_existing(
     root: str,
     pattern: str = "*.tar.gz",
@@ -204,7 +190,7 @@ async def restore_existing(
     return json.dumps(summary)
 
 
-@mcp.tool()
+@_tool()
 async def archive_session_dir(
     src_dir: str,
     format: str = "tar.gz",
@@ -223,7 +209,7 @@ async def archive_session_dir(
     return json.dumps({"archive_path": str(p)})
 
 
-@mcp.tool()
+@_tool()
 async def restore_session_archive(
     archive_path: str,
     dest_dir: Optional[str] = None,
@@ -246,7 +232,7 @@ async def restore_session_archive(
     return json.dumps({"dest_dir": str(p)})
 
 
-@mcp.tool()
+@_tool()
 async def finalize_session(
     config: dict,
     exit_status: Optional[int] = None,
@@ -298,7 +284,7 @@ async def finalize_session(
 # --------------------------------------------------------------------- #
 
 
-@mcp.tool()
+@_tool()
 async def skills_list() -> str:
     """List available skill pages for scitex-session.
 
@@ -321,7 +307,7 @@ async def skills_list() -> str:
     return json.dumps(result, default=str)
 
 
-@mcp.tool()
+@_tool()
 async def skills_get(name: Optional[str] = None) -> str:
     """Get the content of a skitex-session skill page (defaults to SKILL.md).
 
@@ -371,8 +357,13 @@ def main(argv: Any = None) -> int:
         0 on clean exit, non-zero on initialisation failure.
     """
     # FastMCP exposes a synchronous ``.run()`` that handles the asyncio
-    # event loop internally. Stdio is the default transport.
-    mcp.run(transport="stdio")
+    # event loop internally. Stdio is the default transport. Build (or
+    # reuse cached) real FastMCP via ``_build_mcp`` — module-level
+    # ``mcp`` is resolved via PEP-562 ``__getattr__`` from external
+    # callers, but inside this module we go through ``_build_mcp``
+    # explicitly since module ``__getattr__`` does not fire for
+    # in-module lookups.
+    _build_mcp().run(transport="stdio")
     return 0
 
 
