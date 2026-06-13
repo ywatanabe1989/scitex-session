@@ -25,15 +25,6 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-try:
-    from fastmcp import FastMCP
-except ImportError as e:  # pragma: no cover -- exercised only when extra missing
-    raise ImportError(
-        "scitex-session MCP server requires the `fastmcp` package. "
-        "Install with: pip install 'scitex-session[mcp]' "
-        "(or `pip install fastmcp>=2.0` directly)."
-    ) from e
-
 from ._lifecycle._archive import (
     archive_existing as _archive_existing,
 )
@@ -50,15 +41,74 @@ from ._lifecycle._close import running2finished as _running2finished
 
 __all__ = ["mcp", "main"]
 
-mcp = FastMCP(
-    name="scitex-session",
-    instructions=(
-        "Tools for compressing and restoring scitex session directories. "
-        "Each session-dir under FINISHED_SUCCESS becomes a single .tar.gz "
-        "(1 inode vs 7) and the reverse extracts it back to a directory. "
-        "Tool names mirror the public Python API in scitex_session."
-    ),
+
+# Lazy MCP server construction. We defer the ``fastmcp`` import (which
+# is an optional extra — see ``[project.optional-dependencies].mcp``)
+# to first-use to keep bare ``pip install scitex-session`` valid (no
+# unmet runtime dep on the ``scitex-session-mcp`` console-script
+# reachability chain). PS-213 ``core-cli-dep-missing`` then passes.
+#
+# How:
+# - Tool functions are decorated with the local ``_tool(**kw)`` recorder
+#   that simply appends ``(func, kw)`` to ``_PENDING_TOOLS`` at module
+#   load. ``fastmcp`` is NOT imported here.
+# - The module-level name ``mcp`` is resolved by PEP-562 ``__getattr__``
+#   on first access: it imports ``fastmcp.FastMCP``, instantiates the
+#   real server, replays every pending tool registration onto it, and
+#   caches + returns the real instance. Subsequent accesses return the
+#   cached instance directly.
+# - Consumers (``from scitex_session._mcp_server import mcp``,
+#   ``mcp.run(...)``, the umbrella ``safe_mount`` path) see a real
+#   ``FastMCP`` instance — same public type and contract as before.
+
+_INSTRUCTIONS = (
+    "Tools for compressing and restoring scitex session directories. "
+    "Each session-dir under FINISHED_SUCCESS becomes a single .tar.gz "
+    "(1 inode vs 7) and the reverse extracts it back to a directory. "
+    "Tool names mirror the public Python API in scitex_session."
 )
+
+_PENDING_TOOLS: list[tuple[Any, dict[str, Any]]] = []
+_MCP_CACHE: Any = None
+
+
+def _tool(**deco_kwargs: Any) -> Any:
+    """Lightweight recorder that takes the place of ``@_tool()`` at
+    module load, so the real FastMCP instantiation can be deferred."""
+
+    def _decorator(func: Any) -> Any:
+        _PENDING_TOOLS.append((func, deco_kwargs))
+        return func
+
+    return _decorator
+
+
+def _build_mcp() -> Any:
+    global _MCP_CACHE
+    if _MCP_CACHE is not None:
+        return _MCP_CACHE
+    try:
+        from fastmcp import FastMCP
+    except ImportError as e:
+        raise ImportError(
+            "scitex-session MCP server requires the `fastmcp` package. "
+            "Install with: pip install 'scitex-session[mcp]' "
+            "(or `pip install fastmcp>=2.0` directly)."
+        ) from e
+    instance = FastMCP(name="scitex-session", instructions=_INSTRUCTIONS)
+    for func, deco_kwargs in _PENDING_TOOLS:
+        instance.tool(**deco_kwargs)(func)
+    _MCP_CACHE = instance
+    return instance
+
+
+def __getattr__(name: str) -> Any:
+    """PEP-562 module ``__getattr__``: materialise ``mcp`` on first access."""
+    if name == "mcp":
+        return _build_mcp()
+    raise AttributeError(
+        f"module 'scitex_session._mcp_server' has no attribute {name!r}"
+    )
 
 
 # --------------------------------------------------------------------- #
@@ -66,7 +116,7 @@ mcp = FastMCP(
 # --------------------------------------------------------------------- #
 
 
-@mcp.tool()
+@_tool()
 async def archive_existing(
     root: str,
     older_than_days: Optional[float] = None,
@@ -105,7 +155,7 @@ async def archive_existing(
     return json.dumps(summary)
 
 
-@mcp.tool()
+@_tool()
 async def restore_existing(
     root: str,
     pattern: str = "*.tar.gz",
@@ -140,7 +190,7 @@ async def restore_existing(
     return json.dumps(summary)
 
 
-@mcp.tool()
+@_tool()
 async def archive_session_dir(
     src_dir: str,
     format: str = "tar.gz",
@@ -159,7 +209,7 @@ async def archive_session_dir(
     return json.dumps({"archive_path": str(p)})
 
 
-@mcp.tool()
+@_tool()
 async def restore_session_archive(
     archive_path: str,
     dest_dir: Optional[str] = None,
@@ -182,7 +232,7 @@ async def restore_session_archive(
     return json.dumps({"dest_dir": str(p)})
 
 
-@mcp.tool()
+@_tool()
 async def finalize_session(
     config: dict,
     exit_status: Optional[int] = None,
@@ -234,7 +284,7 @@ async def finalize_session(
 # --------------------------------------------------------------------- #
 
 
-@mcp.tool()
+@_tool()
 async def skills_list() -> str:
     """List available skill pages for scitex-session.
 
@@ -257,7 +307,7 @@ async def skills_list() -> str:
     return json.dumps(result, default=str)
 
 
-@mcp.tool()
+@_tool()
 async def skills_get(name: Optional[str] = None) -> str:
     """Get the content of a skitex-session skill page (defaults to SKILL.md).
 
@@ -307,8 +357,13 @@ def main(argv: Any = None) -> int:
         0 on clean exit, non-zero on initialisation failure.
     """
     # FastMCP exposes a synchronous ``.run()`` that handles the asyncio
-    # event loop internally. Stdio is the default transport.
-    mcp.run(transport="stdio")
+    # event loop internally. Stdio is the default transport. Build (or
+    # reuse cached) real FastMCP via ``_build_mcp`` — module-level
+    # ``mcp`` is resolved via PEP-562 ``__getattr__`` from external
+    # callers, but inside this module we go through ``_build_mcp``
+    # explicitly since module ``__getattr__`` does not fire for
+    # in-module lookups.
+    _build_mcp().run(transport="stdio")
     return 0
 
 
