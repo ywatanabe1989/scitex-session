@@ -25,15 +25,6 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-try:
-    from fastmcp import FastMCP
-except ImportError as e:  # pragma: no cover -- exercised only when extra missing
-    raise ImportError(
-        "scitex-session MCP server requires the `fastmcp` package. "
-        "Install with: pip install 'scitex-session[mcp]' "
-        "(or `pip install fastmcp>=2.0` directly)."
-    ) from e
-
 from ._lifecycle._archive import (
     archive_existing as _archive_existing,
 )
@@ -50,7 +41,80 @@ from ._lifecycle._close import running2finished as _running2finished
 
 __all__ = ["mcp", "main"]
 
-mcp = FastMCP(
+
+class _LazyFastMCP:
+    """Lazy proxy for ``fastmcp.FastMCP`` that defers the ``fastmcp``
+    import until the proxy is actually used.
+
+    Why
+    ---
+    ``fastmcp`` lives in ``[project.optional-dependencies].mcp`` — bare
+    ``pip install scitex-session`` does NOT pull it. The previous
+    module-level ``from fastmcp import FastMCP`` + ``mcp = FastMCP(...)``
+    made the ``scitex-session-mcp`` console script unimportable on a
+    bare install (and tripped PS-213 ``core-cli-dep-missing`` in the
+    ecosystem audit, since the entry point ``scitex_session._mcp_server:main``
+    transitively re-imports the module at console-script time).
+
+    The proxy
+    ---------
+    Records ``@mcp.tool()`` decorations at module-load WITHOUT importing
+    ``fastmcp``. The real ``FastMCP`` instance — and the ``fastmcp``
+    import that creates it — is materialised on the FIRST real-method
+    access (typically ``mcp.run(...)`` inside :func:`main`). At that
+    point we also replay the recorded registrations onto the real
+    instance so every ``@mcp.tool()``-decorated function ends up
+    registered exactly as if ``mcp`` had been the real instance from
+    the start.
+
+    Public surface kept identical
+    -----------------------------
+    Module consumers (``from scitex_session._mcp_server import mcp``)
+    and umbrella mounts (``scitex._mcp.safe_mount(mcp, namespace=...)``)
+    interact with the proxy via ``getattr``; all attribute access
+    forwards to the materialised real instance, so they behave the same.
+    """
+
+    def __init__(self, **init_kwargs: Any) -> None:
+        self._init_kwargs = init_kwargs
+        self._pending_tools: list[tuple[Any, dict[str, Any]]] = []
+        self._real: Any = None
+
+    def tool(self, **deco_kwargs: Any) -> Any:
+        """Mimic ``FastMCP.tool()`` decorator factory — record only."""
+
+        def _decorator(func: Any) -> Any:
+            self._pending_tools.append((func, deco_kwargs))
+            return func
+
+        return _decorator
+
+    def _materialise(self) -> Any:
+        if self._real is not None:
+            return self._real
+        try:
+            from fastmcp import FastMCP
+        except ImportError as e:
+            raise ImportError(
+                "scitex-session MCP server requires the `fastmcp` package. "
+                "Install with: pip install 'scitex-session[mcp]' "
+                "(or `pip install fastmcp>=2.0` directly)."
+            ) from e
+        instance = FastMCP(**self._init_kwargs)
+        for func, deco_kwargs in self._pending_tools:
+            instance.tool(**deco_kwargs)(func)
+        self._real = instance
+        return instance
+
+    def __getattr__(self, name: str) -> Any:
+        # ``tool`` and the internal attributes are resolved by normal
+        # attribute lookup (set via __init__ / defined as methods).
+        # Everything else (``.run``, ``.name``, ``.list_tools``, …) is
+        # forwarded to the materialised real instance.
+        return getattr(self._materialise(), name)
+
+
+mcp = _LazyFastMCP(
     name="scitex-session",
     instructions=(
         "Tools for compressing and restoring scitex session directories. "
