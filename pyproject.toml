@@ -31,6 +31,9 @@ dependencies = [
     "scitex-repro>=0.1.0",
     "scitex-str>=0.1.0",
     "scitex-io>=0.2.0",
+    # _lifecycle/_start.py resolves the notebook path via
+    # ``from scitex_context import get_notebook_path``.
+    "scitex-context>=0.1.4",
 ]
 
 [project.optional-dependencies]
