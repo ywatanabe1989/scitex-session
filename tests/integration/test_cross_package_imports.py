@@ -27,7 +27,7 @@ CROSS_PACKAGE_IMPORTS = [
     "scitex_clew",
     "scitex_dev",
     "scitex_dict",
-    "scitex_gen._detect_notebook_path",
+    "scitex_context",
     "scitex_io",
     "scitex_io._flush",
     "scitex_io._save",
