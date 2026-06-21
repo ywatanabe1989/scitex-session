@@ -194,6 +194,15 @@ def run(
 ) -> Any:
     """Run a function with session management — explicit alternative to ``@session``.
 
+    .. note::
+       **INTERNAL / advanced.** Prefer the ``@scitex_session.session``
+       decorator, which is the supported public entry point. This
+       imperative runner forwards ``**session_kwargs`` straight into
+       :func:`scitex_session._start`, so an unexpected keyword (e.g.
+       ``run(name=...)``) surfaces as a ``TypeError`` from ``start()``.
+       Reach it as ``scitex_session._run`` for power-user access; the bare
+       ``scitex_session.run`` name is deprecated.
+
     Parameters
     ----------
     func : callable

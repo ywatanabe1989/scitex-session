@@ -70,9 +70,11 @@ import scitex_session as sess
 def main(CONFIG=sess.INJECTED, logger=sess.INJECTED, rng=sess.INJECTED):
     ...
 
-# Manual lifecycle
-sess.start(...)
-sess.close(...)
+# Manual lifecycle (advanced / internal — prefer the decorator above).
+# `_start` is the low-level entry point: `_start(sys, plt, ...)`, NOT a
+# decorator. The bare `sess.start` name is deprecated.
+sess._start(sys, plt, ...)
+sess.close(CONFIG)
 
 # Class-style manager
 mgr = sess.SessionManager()

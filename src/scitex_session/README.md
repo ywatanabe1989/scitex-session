@@ -70,9 +70,9 @@ Decorator Parameters:
 - agg: Use matplotlib Agg backend (default: False)
 - verbose: Print detailed information (default: True)
 
-### session.start() (Advanced)
+### session._start() (Advanced / internal)
 
-Initialize experiment session with reproducibility settings. Note: The decorator approach is recommended over direct start()/close() calls.
+Initialize experiment session with reproducibility settings. The `@session` decorator is THE recommended entry point; reach this low-level path as `session._start(...)` only when the decorator cannot fit. Note `_start(sys, plt, ...)` is **not** a decorator. The bare `session.start` name is deprecated (emits `DeprecationWarning`) and absent from `dir(scitex_session)`.
 
 Parameters:
 - sys: Python sys module for I/O redirection

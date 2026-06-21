@@ -45,18 +45,22 @@ python my_script.py --param1 foo
 6. Writes outputs under `script_out/FINISHED_SUCCESS/<session_id>/`
    (or `FINISHED_FAILURE/` on exception).
 
-## Manual lifecycle
+## Manual lifecycle (advanced / internal)
 
-If the decorator's contract doesn't fit, drive it yourself:
+The `@session` decorator is THE entry point — use it. Only if its
+contract genuinely doesn't fit, drive the lifecycle yourself with the
+**internal** underscore alias `sess._start` (it is `_start(sys, plt, ...)`,
+not a decorator):
 
 ```python
+import sys, matplotlib.pyplot as plt
 import scitex_session as sess
 
-CONFIG, plt, logger, rng = sess.start()
+CONFIG, sys.stdout, sys.stderr, plt, COLORS, rng = sess._start(sys, plt)
 try:
     ...
 finally:
-    sess.close()
+    sess.close(CONFIG)
 ```
 
 ## See also

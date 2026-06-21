@@ -7,6 +7,24 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **API hygiene — `start` / `run` demoted to internal.** The
+  `@scitex_session.session` decorator is now the single prominent public
+  entry point. The low-level `start()` (`start(sys, plt, ...)`, not a
+  decorator) and the imperative `run()` are removed from `__all__` and
+  from `dir(scitex_session)` so a scanning agent can no longer misfire on
+  them (e.g. `@scitex_session.start` bound `main` to `sys`; `run(name=...)`
+  raised `TypeError` from `start()`). Power users keep access via the new
+  underscore aliases `scitex_session._start` / `scitex_session._run`.
+
+### Deprecated
+
+- Bare `scitex_session.start` / `scitex_session.run` remain importable for
+  backward compatibility but emit a `DeprecationWarning` on access;
+  use the `@scitex_session.session` decorator (or `_start` / `_run` for
+  low-level access) instead.
+
 ## [0.2.0] — 2026-05-26
 
 ### Added

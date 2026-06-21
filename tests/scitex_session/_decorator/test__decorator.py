@@ -249,15 +249,37 @@ class TestSessionDecoratorOptions:
 
 
 class TestRunFunction:
-    """Test the public `run` helper exported alongside the decorator."""
+    """Test the (now internal) `run` helper alongside the decorator."""
 
-    def test_run_function_is_callable(self):
-        """`scitex_session.run` is exported and callable as a programmatic entry point."""
+    def test_bare_run_access_emits_deprecation_warning(self):
+        """Accessing the demoted `scitex_session.run` emits a `DeprecationWarning`."""
         # Arrange
-        from scitex_session import run
+        import scitex_session
+
+        access_bare_run = lambda: scitex_session.run  # noqa: E731
+        # Act
+        warns_cm = pytest.warns(DeprecationWarning)
+        # Assert
+        with warns_cm:
+            access_bare_run()
+
+    def test_bare_run_still_resolves_to_callable(self):
+        """`scitex_session.run` stays importable + callable for back-compat."""
+        # Arrange
+        from scitex_session import run  # back-compat path (warns, suppressed)
 
         # Act
         is_callable = callable(run)
+        # Assert
+        assert is_callable
+
+    def test_private_run_alias_is_callable(self):
+        """`scitex_session._run` is the supported power-user alias + callable."""
+        # Arrange
+        import scitex_session
+
+        # Act
+        is_callable = callable(scitex_session._run)
         # Assert
         assert is_callable
 

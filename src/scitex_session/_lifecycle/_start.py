@@ -165,6 +165,15 @@ def start(
 ) -> Tuple[DotDict, Any, Any, Any, Optional[Dict[str, Any]], Any]:
     """Initialize experiment session with reproducibility settings.
 
+    .. note::
+       **INTERNAL / advanced.** This is the low-level lifecycle the
+       ``@scitex_session.session`` decorator orchestrates — prefer the
+       decorator. Note the signature is ``start(sys, plt, ...)``; it is
+       *not* a decorator (``@scitex_session.start`` would bind your
+       function to the ``sys`` parameter). Reach it as
+       ``scitex_session._start`` for power-user access; the bare
+       ``scitex_session.start`` name is deprecated.
+
     Parameters
     ----------
     sys : module, optional
