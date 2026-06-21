@@ -67,7 +67,7 @@ import scitex_session as sess
 
 # Decorator — wraps main() with auto-CLI, output dir, configs, RNG.
 @sess.session
-def main(CONFIG=sess.INJECTED, logger=sess.INJECTED, rng=sess.INJECTED):
+def main(CONFIG=sess.INJECTED, logger=sess.INJECTED, rngg=sess.INJECTED):
     ...
 
 # Manual lifecycle
@@ -90,7 +90,7 @@ sequenceDiagram
     participant FS as Filesystem
     User->>Dec: invoke
     Dec->>Dec: parse args, fix RNG, build CONFIG
-    Dec->>FS: mkdir script_out/RUNNING_<ID>/
+    Dec->>FS: mkdir script_out/RUNNING/<ID>/
     Dec->>Main: call(CONFIG, logger, rng, plt)
     Main->>FS: stx.io.save(...)
     Main-->>Dec: return 0
@@ -109,7 +109,7 @@ def main(
     CONFIG=sess.INJECTED,
     plt=sess.INJECTED,
     logger=sess.INJECTED,
-    rng=sess.INJECTED,
+    rngg=sess.INJECTED,
 ):
     """Docstring becomes --help."""
     logger.info("hi")
