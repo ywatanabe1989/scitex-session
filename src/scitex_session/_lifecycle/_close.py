@@ -290,12 +290,16 @@ def _close_streams(sys) -> None:
 
 
 def _stop_verification(exit_status: int) -> None:
-    """Stop verification tracking for this session."""
+    """Stop verification tracking for this session.
+
+    Dispatches to registered session-close hooks (e.g. clew lineage) via the
+    acyclic registry; session never imports the subscriber. See _hooks.py.
+    """
     try:
-        from scitex_clew import on_session_close
+        from .._hooks import _fire_session_close_hooks
 
         status = "success" if exit_status == 0 else "failed"
-        on_session_close(status=status, exit_code=exit_status or 0)
+        _fire_session_close_hooks(status=status, exit_code=exit_status or 0)
     except Exception:
         pass
 

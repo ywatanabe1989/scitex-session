@@ -355,9 +355,13 @@ def _redirect_logging_handlers(sys) -> None:
 
 
 def _start_verification(CONFIG) -> None:
-    """Start verification tracking for this session."""
+    """Start verification tracking for this session.
+
+    Dispatches to registered session-start hooks (e.g. clew lineage) via the
+    acyclic registry; session never imports the subscriber. See _hooks.py.
+    """
     try:
-        from scitex_clew import on_session_start
+        from .._hooks import _fire_session_start_hooks
 
         session_id = CONFIG.get("ID", "unknown")
         file_path = CONFIG.get("FILE")
@@ -368,8 +372,8 @@ def _start_verification(CONFIG) -> None:
         if file_path and file_path.endswith(".ipynb"):
             metadata = {"notebook_path": file_path}
 
-        on_session_start(
-            session_id=session_id, script_path=file_path, metadata=metadata
+        _fire_session_start_hooks(
+            session_id, script_path=file_path, metadata=metadata
         )
     except Exception:
         pass

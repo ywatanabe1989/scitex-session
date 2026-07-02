@@ -15,6 +15,8 @@ __DIR__ = os.path.dirname(__FILE__)
 from datetime import datetime
 from typing import Any, Dict
 
+from ._hooks import _fire_session_close_hooks, _fire_session_start_hooks
+
 
 class SessionManager:
     """Manages experiment sessions with tracking and lifecycle management."""
@@ -46,16 +48,10 @@ class SessionManager:
             "script_path": script_path,
         }
 
-        # Start verification tracking (silent fail)
-        try:
-            from scitex_clew import on_session_start
-
-            on_session_start(
-                session_id=session_id,
-                script_path=script_path,
-            )
-        except Exception:
-            pass
+        # Notify lifecycle subscribers of session start (e.g. clew lineage).
+        # session never imports the subscriber; per-hook silent-fail lives in
+        # the registry. See _hooks.py.
+        _fire_session_start_hooks(session_id, script_path=script_path)
 
     def close_session(
         self,
@@ -79,13 +75,8 @@ class SessionManager:
             self.active_sessions[session_id]["end_time"] = datetime.now()
             self.active_sessions[session_id]["exit_code"] = exit_code
 
-        # Stop verification tracking (silent fail)
-        try:
-            from scitex_clew import on_session_close
-
-            on_session_close(status=status, exit_code=exit_code)
-        except Exception:
-            pass
+        # Notify lifecycle subscribers of session close (e.g. clew lineage).
+        _fire_session_close_hooks(status=status, exit_code=exit_code)
 
     def get_active_sessions(self) -> Dict[str, Any]:
         """Get all active sessions.

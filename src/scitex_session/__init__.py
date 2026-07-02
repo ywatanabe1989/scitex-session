@@ -192,6 +192,18 @@ def __dir__() -> list[str]:
     return sorted(names)
 
 
+# Lifecycle-hook registry (the acyclic observer seam). Imported EAGERLY —
+# ``_hooks`` has no heavy dependencies (stdlib typing only), and the register
+# functions must exist as real attributes the instant ``scitex_session`` is
+# imported, because downstream subscribers (e.g. clew's ``sys.meta_path``
+# finder) call ``scitex_session.register_session_start_hook`` on our import.
+from ._hooks import (  # noqa: E402
+    register_session_close_hook,
+    register_session_start_hook,
+    unregister_session_close_hook,
+    unregister_session_start_hook,
+)
+
 # Export public API. ``start`` and ``run`` are intentionally omitted: the
 # decorator ``session`` is THE entry point; ``start``/``run`` are internal
 # (reach them via ``_start`` / ``_run`` if you must).
@@ -211,6 +223,11 @@ __all__ = [
     "restore_session_archive",
     "archive_existing",
     "restore_existing",
+    # Lifecycle-hook registry (acyclic observer seam for clew et al.)
+    "register_session_start_hook",
+    "register_session_close_hook",
+    "unregister_session_start_hook",
+    "unregister_session_close_hook",
 ]
 
 # EOF
