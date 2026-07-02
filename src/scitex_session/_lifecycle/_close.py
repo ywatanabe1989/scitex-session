@@ -32,6 +32,69 @@ from ._utils import args_to_str, escape_ansi_from_log_files, process_timestamp
 
 logger = getLogger(__name__)
 
+# Default archive format applied on close when the caller passes no
+# explicit ``archive_format`` and ``CONFIG.SESSION.ARCHIVE_FORMAT`` is not
+# set. Archiving on close collapses each run dir (~6 loose files) into a
+# single ``.tar.gz`` (1 inode) — the source fix for HPC inode pressure.
+DEFAULT_ARCHIVE_FORMAT = "tar.gz"
+
+
+class _Unset:
+    """Sentinel telling ``close()`` the caller did not pass an
+    ``archive_format`` at all.
+
+    This is distinct from an explicit ``None``/``""`` (which both mean
+    "disable archiving"), so a config-level ``ARCHIVE_FORMAT`` override
+    can still take effect / be turned off by the user.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __repr__(self):  # pragma: no cover - cosmetic
+        return "<UNSET>"
+
+    def __bool__(self):
+        return False
+
+
+UNSET = _Unset()
+
+
+def _resolve_archive_format(archive_format, CONFIG):
+    """Resolve the effective archive format used on close.
+
+    Precedence (highest first):
+
+    1. Explicit ``archive_format`` kwarg (anything other than the
+       :data:`UNSET` sentinel). ``None``/``""`` here disable archiving.
+    2. ``CONFIG.SESSION.ARCHIVE_FORMAT`` if that key is present (again,
+       ``None``/``""`` disable archiving).
+    3. :data:`DEFAULT_ARCHIVE_FORMAT` (``"tar.gz"``) — the default.
+
+    Returns the format string, or ``None`` to disable archiving. An
+    empty string is normalized to ``None``.
+    """
+    if archive_format is not UNSET:
+        resolved = archive_format
+    else:
+        resolved = DEFAULT_ARCHIVE_FORMAT
+        try:
+            session_cfg = CONFIG.get("SESSION") if hasattr(CONFIG, "get") else None
+            if isinstance(session_cfg, dict) and "ARCHIVE_FORMAT" in session_cfg:
+                resolved = session_cfg.get("ARCHIVE_FORMAT")
+        except Exception:
+            resolved = DEFAULT_ARCHIVE_FORMAT
+
+    # Normalize "disable" spellings to None.
+    if resolved is None or resolved == "":
+        return None
+    return resolved
+
 
 def running2finished(
     CONFIG,
@@ -148,9 +211,13 @@ def close(
     notify=False,
     verbose=True,
     exit_status=None,
-    archive_format=None,
+    archive_format=UNSET,
 ):
     """Close experiment session and finalize logging.
+
+    By default the FINISHED run dir is collapsed into a single
+    ``.tar.gz`` archive (~6 loose files → 1 inode). This is the default
+    to keep filesystem inode usage bounded on shared/HPC storage.
 
     Parameters
     ----------
@@ -165,9 +232,13 @@ def close(
     exit_status : int, optional
         Exit status code (0=success, 1=error, None=finished)
     archive_format : str, optional
-        If set (e.g. "tar.gz"), replace the FINISHED dest dir with a
-        single archive file. ``None`` (default) preserves the original
-        copytree-only behavior bit-for-bit.
+        Archive the FINISHED dest dir into a single file of this format
+        (e.g. ``"tar.gz"``). Defaults to ``"tar.gz"`` (archive on close).
+        Pass ``None`` or ``""`` to disable archiving and keep the loose
+        dir. The default can also be set/overridden via
+        ``CONFIG.SESSION.ARCHIVE_FORMAT`` (setting it to ``None``/``""``
+        there disables archiving for all closes that don't pass an
+        explicit value).
     """
     # Stop verification tracking first
     _stop_verification(exit_status)
@@ -184,17 +255,10 @@ def close(
 
         save_configs(CONFIG)
 
-        # If archive_format wasn't passed explicitly, fall back to
-        # ``CONFIG.SESSION.ARCHIVE_FORMAT`` if it's been set via user
-        # config. Keeps backward compat when nothing is set.
-        effective_archive_format = archive_format
-        if effective_archive_format is None:
-            try:
-                session_cfg = CONFIG.get("SESSION")
-                if isinstance(session_cfg, dict):
-                    effective_archive_format = session_cfg.get("ARCHIVE_FORMAT")
-            except Exception:
-                effective_archive_format = None
+        # Resolve the effective archive format. Default is "tar.gz"
+        # (archive on close); an explicit kwarg or
+        # ``CONFIG.SESSION.ARCHIVE_FORMAT`` can override or disable it.
+        effective_archive_format = _resolve_archive_format(archive_format, CONFIG)
 
         # RUNNING to FINISHED
         CONFIG = running2finished(

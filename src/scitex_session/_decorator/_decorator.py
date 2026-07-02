@@ -14,6 +14,7 @@ from __future__ import annotations
 import functools
 from typing import Callable
 
+from .._lifecycle import UNSET
 from ._run import _run_with_session
 
 
@@ -24,7 +25,7 @@ def session(
     agg: bool = True,
     notify: bool = False,
     sdir_suffix: str = None,
-    archive_format: str = None,
+    archive_format=UNSET,
     **session_kwargs,
 ) -> Callable:
     """Decorator to wrap a function in a scitex session.
@@ -55,8 +56,10 @@ def session(
     sdir_suffix : str, optional
         Suffix for the output directory name (defaults to function name).
     archive_format : str, optional
-        If set (e.g. ``"tar.gz"``), replace FINISHED_SUCCESS/<session>/
-        with a single archive file (1 inode vs 7).
+        Collapse FINISHED_SUCCESS/<session>/ into a single archive file
+        (1 inode vs ~7) on close. Defaults to ``"tar.gz"`` (archive on
+        close). Pass ``None`` or ``""`` to keep the loose directory. Can
+        also be set/overridden via ``CONFIG.SESSION.ARCHIVE_FORMAT``.
     **session_kwargs
         Additional session configuration parameters forwarded to
         ``scitex_session.start`` / ``scitex_session.close``.
@@ -125,6 +128,7 @@ def session(
     - ``rngg`` (RandomStateManager): Reproducibility manager; creates
       named generators via ``rngg("name")``.
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

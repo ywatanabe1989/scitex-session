@@ -17,13 +17,14 @@ from ._archive import (
     restore_existing,
     restore_session_archive,
 )
-from ._close import close, running2finished
+from ._close import UNSET, close, running2finished
 from ._start import start
 
 __all__ = [
     "start",
     "close",
     "running2finished",
+    "UNSET",
     "archive_session_dir",
     "restore_session_archive",
     "archive_existing",

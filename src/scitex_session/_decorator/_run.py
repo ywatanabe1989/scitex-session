@@ -18,7 +18,7 @@ from logging import getLogger
 from typing import Any, Callable
 
 from .. import INJECTED
-from .._lifecycle import close, start
+from .._lifecycle import UNSET, close, start
 from ._cli import _create_parser
 
 # Internal logger for the decorator itself.
@@ -31,7 +31,7 @@ def _run_with_session(
     agg: bool,
     notify: bool,
     sdir_suffix: str,
-    archive_format: str = None,
+    archive_format=UNSET,
     **session_kwargs,
 ) -> Any:
     """Run a function with full session management.
@@ -51,11 +51,7 @@ def _run_with_session(
 
     # Clean up INJECTED sentinels from args before passing to session.
     cleaned_args = argparse.Namespace(
-        **{
-            k: v
-            for k, v in vars(args).items()
-            if not isinstance(v, type(INJECTED))
-        }
+        **{k: v for k, v in vars(args).items() if not isinstance(v, type(INJECTED))}
     )
 
     import matplotlib.pyplot as plt
@@ -89,19 +85,11 @@ def _run_with_session(
         )
         _decorator_logger.info("  • CONFIG - Session configuration dict")
         _decorator_logger.info(f"      - CONFIG['ID']: {CONFIG['ID']}")
-        _decorator_logger.info(
-            f"      - CONFIG['SDIR_RUN']: {CONFIG['SDIR_RUN']}"
-        )
+        _decorator_logger.info(f"      - CONFIG['SDIR_RUN']: {CONFIG['SDIR_RUN']}")
         _decorator_logger.info(f"      - CONFIG['PID']: {CONFIG['PID']}")
-        _decorator_logger.info(
-            "  • plt - matplotlib.pyplot (configured for session)"
-        )
-        _decorator_logger.info(
-            "  • COLORS - CustomColors (for consistent plotting)"
-        )
-        _decorator_logger.info(
-            "  • rngg - RandomStateManager (for reproducibility)"
-        )
+        _decorator_logger.info("  • plt - matplotlib.pyplot (configured for session)")
+        _decorator_logger.info("  • COLORS - CustomColors (for consistent plotting)")
+        _decorator_logger.info("  • rngg - RandomStateManager (for reproducibility)")
         _decorator_logger.info(
             "  • logger - SciTeX logger (configured for your script)"
         )
@@ -140,12 +128,8 @@ def _run_with_session(
                     filtered_kwargs[param_name] = injection_map[param_name]
 
         if verbose:
-            args_summary = {
-                k: type(v).__name__ for k, v in filtered_kwargs.items()
-            }
-            _decorator_logger.info(
-                f"Running {func.__name__} with injected parameters:"
-            )
+            args_summary = {k: type(v).__name__ for k, v in filtered_kwargs.items()}
+            _decorator_logger.info(f"Running {func.__name__} with injected parameters:")
             _decorator_logger.info(args_summary, pprint=True, indent=2)
 
         # Execute function.
@@ -158,9 +142,7 @@ def _run_with_session(
             exit_status = 0
 
     except Exception as e:
-        _decorator_logger.error(
-            f"Error in {func.__name__}: {e}", exc_info=True
-        )
+        _decorator_logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
         exit_status = 1
         raise
 
