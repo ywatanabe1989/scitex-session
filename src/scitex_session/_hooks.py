@@ -76,67 +76,21 @@ def unregister_session_close_hook(fn: Callable[..., Any]) -> None:
 def _fire_session_start_hooks(
     session_id: Any, script_path: Any = None, metadata: Any = None
 ) -> None:
-    """Fire all registered start hooks (isolated silent-fail per hook).
-
-    When no start hook is registered, fall back to the legacy direct clew
-    import so tracking has a zero-gap rollout window (see ``_legacy_clew_*``).
-    """
-    if _SESSION_START_HOOKS:
-        for hook in list(_SESSION_START_HOOKS):
-            try:
-                hook(session_id, script_path, metadata)
-            except Exception:
-                pass
-    else:
-        _legacy_clew_start(session_id, script_path, metadata)
+    """Fire all registered start hooks (isolated silent-fail per hook)."""
+    for hook in list(_SESSION_START_HOOKS):
+        try:
+            hook(session_id, script_path, metadata)
+        except Exception:
+            pass
 
 
 def _fire_session_close_hooks(status: Any = "success", exit_code: Any = 0) -> None:
-    """Fire all registered close hooks (isolated silent-fail per hook).
-
-    Falls back to the legacy direct clew import when nothing is registered.
-    """
-    if _SESSION_CLOSE_HOOKS:
-        for hook in list(_SESSION_CLOSE_HOOKS):
-            try:
-                hook(status, exit_code)
-            except Exception:
-                pass
-    else:
-        _legacy_clew_close(status, exit_code)
-
-
-# ----------------------------------------------------------------------------
-# TEMPORARY backward-compat fallback.
-#
-# Fired ONLY when no hook is registered — i.e. the installed scitex-clew
-# predates its ``register_with_scitex_session`` meta_path subscriber. This keeps
-# lineage tracking working during the rollout window with no double-fire (a
-# subscribed clew registers a hook, so this branch is skipped). REMOVE both
-# helpers and their call sites above once a scitex-clew release that subscribes
-# via the registry is published on PyPI. This is the last line that names clew;
-# deleting it completes the acyclic guarantee.
-# ----------------------------------------------------------------------------
-def _legacy_clew_start(
-    session_id: Any, script_path: Any = None, metadata: Any = None
-) -> None:
-    try:
-        from scitex_clew import on_session_start
-
-        on_session_start(
-            session_id=session_id, script_path=script_path, metadata=metadata
-        )
-    except Exception:
-        pass
-
-
-def _legacy_clew_close(status: Any = "success", exit_code: Any = 0) -> None:
-    try:
-        from scitex_clew import on_session_close
-
-        on_session_close(status=status, exit_code=exit_code)
-    except Exception:
-        pass
+    """Fire all registered close hooks (isolated silent-fail per hook)."""
+    for hook in list(_SESSION_CLOSE_HOOKS):
+        try:
+            hook(status, exit_code)
+        except Exception:
+            pass
 
 
 # EOF
